@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEUF — La bande</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0D12; --surface:#12151D; --surface-2:#1A1E29; --border:#242938;
+    --text:#EDEAE2; --text-muted:#8B8F9E; --accent:#E8A33D; --accent-ink:#1A1206;
+    --teal:#4FB3A9; --danger:#C1443B; --r-s:6px; --r-m:10px; --r-l:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;}
+  button,input,select,textarea{font-family:inherit; font-size:inherit; color:inherit;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .muted{color:var(--text-muted);}
+  .small{font-size:.78rem;}
+
+  /* TOPBAR */
+  .topbar{position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:16px; height:64px; padding:0 20px; border-bottom:1px solid var(--border); background:rgba(11,13,18,.92); backdrop-filter:blur(10px);}
+  .btnMenu{display:none; background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding:4px 8px;}
+  .brand{display:flex; align-items:center; gap:9px; cursor:pointer; flex-shrink:0;}
+  .brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent),#C97A22); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem; font-family:'Space Grotesk';}
+  .brand-word{font-size:1.15rem; font-weight:700; letter-spacing:-.02em;}
+  .searchbar{flex:1; max-width:520px; margin:0 auto; position:relative;}
+  .searchbar svg{position:absolute; left:13px; top:50%; transform:translateY(-50%); opacity:.5;}
+  .searchbar input{width:100%; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:10px 16px 10px 38px; color:var(--text); outline:none;}
+  .searchbar input:focus{border-color:var(--accent);}
+  .topbar-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .btn{border-radius:999px; padding:9px 15px; font-weight:600; font-size:.83rem; cursor:pointer; border:none; transition:opacity .15s; white-space:nowrap;}
+  .btn:hover{opacity:.85;}
+  .btn:disabled{opacity:.5; cursor:default;}
+  .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn-accent{background:var(--accent); color:var(--accent-ink);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .identity-pill{width:36px; height:36px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;}
+
+  /* LAYOUT */
+  .body{display:flex;}
+  .rail{width:220px; flex-shrink:0; border-right:1px solid var(--border); padding:16px 10px; position:sticky; top:64px; height:calc(100vh - 64px); overflow-y:auto;}
+  .rail-item{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text-muted); padding:10px 14px; border-radius:var(--r-s); font-size:.87rem; font-weight:600; cursor:pointer; margin-bottom:2px;}
+  .rail-item:hover,.rail-item.active{background:var(--surface-2); color:var(--text);}
+  .rail-label{font-size:.72rem; color:var(--text-muted); padding:16px 14px 6px;}
+  .rail-friend{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:none; padding:8px 14px; border-radius:var(--r-s); cursor:pointer; font-size:.84rem; color:var(--text-muted); margin-bottom:1px;}
+  .rail-friend:hover,.rail-friend.active{background:var(--surface-2); color:var(--text);}
+  .rail-avatar{width:24px; height:24px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:700; color:var(--teal); flex-shrink:0;}
+  main{flex:1; padding:24px 26px 60px; max-width:1400px; min-width:0;}
+
+  /* GRID / CARDS */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:24px 16px;}
+  .card{cursor:pointer;}
+  .card-thumb{position:relative; width:100%; aspect-ratio:16/9; background:var(--surface); border-radius:var(--r-m); overflow:hidden;}
+  .card-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .thumb-fallback{width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--surface-2),var(--surface));}
+  .duration-badge{position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,.78); color:#fff; font-size:.68rem; padding:2px 6px; border-radius:4px; font-weight:600;}
+  .card-badge{position:absolute; top:8px; left:8px; background:rgba(0,0,0,.78); padding:3px 8px; border-radius:6px; font-size:.66rem; font-weight:700;}
+  .card-badge.private{color:var(--teal);}
+  .card-badge.scheduled{color:var(--accent);}
+  .card-meta{display:flex; gap:10px; margin-top:10px;}
+  .card-avatar{width:32px; height:32px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.72rem; color:var(--teal); flex-shrink:0;}
+  .card-title{font-size:.9rem; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .card-sub{font-size:.76rem; color:var(--text-muted); margin-top:4px;}
+  .empty-state{padding:60px 20px; text-align:center; color:var(--text-muted); font-size:.92rem;}
+
+  /* WATCH */
+  .backbtn{margin-bottom:16px;}
+  .watch-wrap{display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start;}
+  .watch-main{flex:2 1 420px; min-width:0;}
+  .watch-side{flex:1 1 260px; min-width:0;}
+  .player{width:100%; aspect-ratio:16/9; background:#000; border-radius:var(--r-l); overflow:hidden;}
+  .player video{width:100%; height:100%; display:block;}
+  .watch-title{font-size:1.2rem; font-weight:700; margin-top:14px;}
+  .watch-channel-row{display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-bottom:14px; border-bottom:1px solid var(--border); gap:10px; flex-wrap:wrap;}
+  .watch-channel-left{display:flex; align-items:center; gap:10px; cursor:pointer;}
+  .watch-avatar{width:38px; height:38px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--teal);}
+  .watch-actions{display:flex; gap:8px;}
+  .like-btn{display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:8px 14px; cursor:pointer; font-weight:600; font-size:.82rem;}
+  .like-btn.active{border-color:var(--accent); color:var(--accent);}
+  .watch-desc{margin-top:14px; background:var(--surface); border-radius:var(--r-m); padding:14px; font-size:.86rem; color:var(--text-muted); white-space:pre-wrap;}
+  .comments{margin-top:24px;}
+  .comment-input-row{display:flex; gap:8px; margin:14px 0 18px;}
+  .comment-input-row input{flex:1; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:9px 12px; outline:none;}
+  .comment-input-row input:focus{border-color:var(--accent);}
+  .comment-item{display:flex; gap:10px; margin-bottom:14px;}
+  .comment-avatar{width:28px; height:28px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:700; color:var(--teal); flex-shrink:0;}
+  .comment-author{font-weight:600; font-size:.82rem;}
+  .comment-time{color:var(--text-muted); font-weight:400; font-size:.74rem; margin-left:4px;}
+  .comment-text{font-size:.85rem; margin-top:2px;}
+
+  /* CHANNEL */
+  .channel-header{display:flex; align-items:center; gap:16px; margin-bottom:26px;}
+  .channel-avatar{width:64px; height:64px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; color:var(--teal);}
+
+  /* MODALS */
+  .overlay{position:fixed; inset:0; background:rgba(5,6,9,.72); backdrop-filter:blur(6px); z-index:60; display:none; align-items:center; justify-content:center; padding:20px;}
+  .overlay.open{display:flex;}
+  .modal-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-l); width:100%; max-width:460px; max-height:88vh; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:11px;}
+  .modal-box h2{font-size:1.05rem;}
+  .modal-box label{font-size:.78rem; color:var(--text-muted); margin-top:4px;}
+  .modal-box input,.modal-box select,.modal-box textarea{width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--border); background:var(--bg); outline:none;}
+  .modal-box input:focus,.modal-box select:focus,.modal-box textarea:focus{border-color:var(--accent);}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:6px;}
+  .checkbox-row{display:flex; align-items:center; gap:8px; font-size:.82rem; color:var(--text-muted);}
+  .checkbox-row input{width:auto;}
+  .form-error{background:rgba(193,68,59,.15); border:1px solid var(--danger); color:#ffb4ab; padding:10px 12px; border-radius:8px; font-size:.82rem;}
+  .identity-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
+  .identity-btn{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-m); padding:14px 10px; cursor:pointer; font-weight:600; text-align:center;}
+  .identity-btn:hover{border-color:var(--accent);}
+  .shield-h3{font-size:.85rem; margin-top:10px;}
+  .shield-list{max-height:320px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px;}
+  .shield-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 4px; font-size:.8rem; border-bottom:1px solid var(--border);}
+  .shield-row:last-child{border-bottom:none;}
+  .icon-btn{background:none; border:none; cursor:pointer; font-size:1rem; color:var(--text-muted); flex-shrink:0;}
+  .icon-btn.danger{color:var(--danger);}
+  .fp-holder{border-bottom:1px solid var(--border); margin-bottom:2px;}
+  .fp-holder:last-child{border-bottom:none;}
+  .fp-holder>summary{cursor:pointer; font-weight:700; font-size:.82rem; padding:8px 4px; list-style:none; display:flex; align-items:center; gap:6px;}
+  .fp-holder>summary::-webkit-details-marker{display:none;}
+  .fp-holder>summary::before{content:'▸'; font-size:.7rem; color:var(--text-muted); transition:transform .15s;}
+  .fp-holder[open]>summary::before{transform:rotate(90deg);}
+  .fp-work{margin:0 0 4px 16px; border-left:2px solid var(--border); padding-left:6px;}
+  .fp-work>summary{cursor:pointer; font-weight:600; font-size:.78rem; color:var(--text-muted); padding:6px 4px; list-style:none; display:flex; align-items:center; gap:6px;}
+  .fp-work>summary::-webkit-details-marker{display:none;}
+  .fp-work>summary::before{content:'▸'; font-size:.65rem; transition:transform .15s;}
+  .fp-work[open]>summary::before{transform:rotate(90deg);}
+
+  /* AUTH TABS */
+  .tab-row{display:flex; gap:6px; margin-top:8px; border-bottom:1px solid var(--border);}
+  .tab-btn{background:none; border:none; color:var(--text-muted); font-weight:600; font-size:.85rem; padding:9px 4px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;}
+  .tab-btn.active{color:var(--text); border-bottom-color:var(--accent);}
+  .pic-row{display:flex; align-items:center; gap:12px; margin-top:6px;}
+  .pic-preview{width:56px; height:56px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--teal); overflow:hidden; flex-shrink:0;}
+  .pic-preview img{width:100%; height:100%; object-fit:cover; display:block;}
+
+  /* STUDIO */
+  .studio-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:20px;}
+  .studio-stat{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-m); padding:14px;}
+  .studio-stat .num{font-size:1.5rem; font-weight:700; font-family:'Space Grotesk';}
+  .studio-stat .lbl{font-size:.74rem; color:var(--text-muted); margin-top:2px;}
+  .studio-chart{display:flex; align-items:flex-end; gap:4px; height:80px; margin-bottom:24px; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-m);}
+  .studio-bar{flex:1; background:var(--teal); border-radius:3px 3px 0 0; min-height:2px; position:relative;}
+  .studio-bar:hover{background:var(--accent);}
+  .studio-bar .bar-tip{position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:.62rem; color:var(--text-muted); white-space:nowrap; margin-bottom:2px;}
+  .studio-row{display:flex; align-items:center; gap:12px; padding:12px 8px; border-bottom:1px solid var(--border);}
+  .studio-row:last-child{border-bottom:none;}
+  .studio-thumb{width:96px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .studio-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .studio-meta{flex:1; min-width:0;}
+  .studio-title{font-weight:600; font-size:.87rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .studio-nums{font-size:.76rem; color:var(--text-muted); margin-top:3px;}
+  .comment-del{background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.78rem; margin-left:auto; flex-shrink:0; padding:2px 4px;}
+  .comment-del:hover{color:var(--danger);}
+  .comment-item{align-items:flex-start;}
+  .comment-row-top{display:flex; align-items:center; width:100%;}
+
+  /* TOAST */
+  #toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface-2); border:1px solid var(--border); padding:11px 18px; border-radius:999px; font-size:.84rem; opacity:0; pointer-events:none; transition:all .25s; z-index:80; max-width:90vw; text-align:center;}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:900px){
+    .btnMenu{display:inline-flex; align-items:center;}
+    .rail{position:fixed; left:0; top:64px; bottom:0; background:var(--bg); transform:translateX(-100%); transition:transform .25s ease; z-index:40; width:230px;}
+    .rail.open{transform:translateX(0); box-shadow:20px 0 40px rgba(0,0,0,.5);}
+    .topbar{flex-wrap:wrap; height:auto; padding:10px 14px; row-gap:8px;}
+    .searchbar{order:3; width:100%; max-width:none; margin:0;}
+    main{padding:16px;}
+  }
+</style>
+</head>
+<body>
+<div id="firebaseLoadError" style="display:none; position:fixed; inset:0; z-index:999; background:#0B0D12; color:#EDEAE2; font-family:system-ui,sans-serif; padding:28px; text-align:center;">
+  <div style="max-width:420px; margin:60px auto 0;">
+    <div style="font-size:2.2rem;">📡</div>
+    <h2 style="margin:14px 0 8px;">Impossible de charger Firebase</h2>
+    <p style="color:#8B8F9E; line-height:1.5;">La page n'a pas réussi à charger les fichiers nécessaires depuis le serveur de Google. C'est presque toujours l'une de ces causes :</p>
+    <ul style="text-align:left; color:#8B8F9E; line-height:1.6; margin:14px 0;">
+      <li>Connexion internet trop lente ou coupée</li>
+      <li>Bloqueur de pub / navigateur privé qui bloque gstatic.com</li>
+      <li>Mode avion ou économiseur de données activé</li>
+    </ul>
+    <p style="color:#8B8F9E;">Vérifie ta connexion, désactive un éventuel bloqueur de pub pour cette page, puis recharge.</p>
+    <button onclick="location.reload()" style="margin-top:16px; background:#E8A33D; color:#1A1206; border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:1rem; cursor:pointer;">Recharger la page</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <button class="btnMenu" id="btnMenu">☰</button>
+  <div class="brand" onclick="goHome()">
+    <div class="brand-mark">N9</div>
+    <div class="brand-word">NEUF</div>
+  </div>
+  <div class="searchbar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" stroke-width="2"/><path d="M20 20L16.5 16.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="searchInput" placeholder="Rechercher dans la bande…" oninput="renderHome()">
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" id="btnSync" title="Sauvegarde locale">💾 Local</button>
+    <button class="btn btn-ghost" id="btnShield">🛡️ Bouclier</button>
+    <button class="btn btn-accent" id="btnUpload">+ Publier</button>
+    <button class="identity-pill" id="btnIdentity" title="Changer d'identité"></button>
+  </div>
+</div>
+
+<div class="body">
+  <aside class="rail" id="rail">
+    <button class="rail-item active" id="railHome" onclick="goHome()">Accueil</button>
+    <button class="rail-item" id="railStudio" onclick="openStudio()" hidden>📊 Studio</button>
+    <div class="rail-label">La classe</div>
+    <div id="railFriends"></div>
+  </aside>
+
+  <main>
+    <section id="viewHome">
+      <div class="grid" id="homeGrid"></div>
+      <div class="empty-state" id="homeEmpty" hidden></div>
+    </section>
+
+    <section id="viewWatch" hidden>
+      <button class="btn btn-ghost backbtn" onclick="goHome()">← Retour</button>
+      <div class="watch-wrap">
+        <div class="watch-main">
+          <div class="player"><video id="playerVideo" controls playsinline></video></div>
+          <div class="watch-title" id="watchTitle"></div>
+          <div class="watch-channel-row">
+            <div class="watch-channel-left" id="watchChannelName">
+              <div class="watch-avatar" id="watchChannelAvatar"></div>
+              <div>
+                <div id="watchChannelNameText" style="font-weight:600; font-size:.9rem;"></div>
+                <div class="muted small" id="watchMeta"></div>
+              </div>
+            </div>
+            <div class="watch-actions">
+              <button class="like-btn" id="watchLikeBtn" onclick="toggleLike()">♥ <span class="count">0</span></button>
+              <button class="btn btn-ghost" id="watchDeleteBtn" style="color:var(--danger);" onclick="deleteCurrentVideo()" hidden>🗑️ Supprimer</button>
+            </div>
+          </div>
+          <div class="watch-desc" id="watchDesc"></div>
+
+          <div class="comments">
+            <h3 style="font-size:.95rem;">Commentaires (<span id="commentsCount">0</span>)</h3>
+            <div class="comment-input-row">
+              <input id="commentInput" placeholder="Écris un commentaire…" onkeydown="if(event.key==='Enter')sendComment()">
+              <button class="btn btn-accent" onclick="sendComment()">Envoyer</button>
+            </div>
+            <div id="commentsList"></div>
+          </div>
+        </div>
+        <div class="watch-side"></div>
+      </div>
+    </section>
+
+    <section id="viewChannel" hidden>
+      <button class="btn btn-ghost backbtn" onclick="goHome()">← Retour</button>
+      <div class="channel-header">
+        <div class="channel-avatar" id="channelAvatar"></div>
+        <div>
+          <h2 id="channelTitle"></h2>
+          <div class="muted small" id="channelCount"></div>
+        </div>
+      </div>
+      <div class="grid" id="channelGrid"></div>
+      <div class="empty-state" id="channelEmpty" hidden>Cette personne n'a encore rien publié.</div>
+    </section>
+
+    <section id="viewStudio" hidden>
+      <h2 style="margin-bottom:16px;">📊 Studio — <span id="studioChannelName"></span></h2>
+      <div class="studio-stats" id="studioStats"></div>
+      <div class="studio-chart" id="studioChart"></div>
+      <div id="studioList"></div>
+      <div class="empty-state" id="studioEmpty" hidden>Tu n'as encore rien publié.</div>
+    </section>
+  </main>
+</div>
+
+<!-- IDENTITY MODAL -->
+<div class="overlay" id="identityModal">
+  <div class="modal-box">
+    <h2>Connexion</h2>
+    <p class="muted small">Connecte-toi ou crée ton compte pour publier, commenter et gérer ta chaîne.</p>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabLoginBtn" onclick="switchIdentityTab('login')">Se connecter</button>
+      <button class="tab-btn" id="tabSignupBtn" onclick="switchIdentityTab('signup')">Créer un compte</button>
+    </div>
+    <div id="loginPane">
+      <label>Email</label><input type="email" id="loginEmail" autocomplete="username">
+      <label>Mot de passe</label><input type="password" id="loginPw" autocomplete="current-password">
+      <div class="form-error" id="identityErr" hidden></div>
+      <div class="modal-actions"><button class="btn btn-accent" style="width:100%" id="loginSubmitBtn" onclick="doLogin()">Se connecter</button></div>
+    </div>
+    <div id="signupPane" hidden>
+      <label>Nom de chaîne</label><input type="text" id="signupName" placeholder="Ex : Sam K." autocomplete="nickname">
+      <label>Email</label><input type="email" id="signupEmail" autocomplete="username">
+      <label>Mot de passe</label><input type="password" id="signupPw" autocomplete="new-password">
+      <div class="form-error" id="signupErr" hidden></div>
+      <div class="modal-actions"><button class="btn btn-accent" style="width:100%" id="signupSubmitBtn" onclick="doSignup()">Créer mon compte</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT MODAL -->
+<div class="overlay" id="accountModal">
+  <div class="modal-box">
+    <h2>Mon compte</h2>
+    <div class="pic-row">
+      <div class="pic-preview" id="accountPicPreview"></div>
+      <div>
+        <input type="file" id="accountPicInput" accept="image/*" onchange="previewAccountPic(this)">
+        <div class="muted small">Photo de profil (facultatif)</div>
+      </div>
+    </div>
+    <label>Nom de chaîne</label>
+    <input type="text" id="accountNameInput">
+    <div class="form-error" id="accountErr" hidden></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAccount()">Fermer</button>
+      <button class="btn btn-accent" onclick="saveAccount()">Enregistrer</button>
+    </div>
+    <div class="modal-actions" style="justify-content:flex-start; border-top:1px solid var(--border); padding-top:11px; margin-top:2px;">
+      <button class="btn btn-ghost" style="width:100%" onclick="doLogout()">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="overlay" id="uploadModal">
+  <div class="modal-box">
+    <h2>Publier une vidéo</h2>
+    <p class="muted small">Publié en tant que <strong id="uploadAsLabel"></strong></p>
+
+    <label>Titre</label>
+    <input type="text" id="uploadTitle" placeholder="Ex : Session skate du dimanche">
+
+    <label>Description</label>
+    <textarea id="uploadDesc" rows="2" placeholder="Une petite légende…"></textarea>
+
+    <label>Visibilité</label>
+    <select id="uploadVisibility">
+      <option value="public">Publique (toute la bande)</option>
+      <option value="private">Privée (visible par toi uniquement)</option>
+      <option value="scheduled">Programmée</option>
+    </select>
+    <div id="scheduleRow" hidden>
+      <label>Date et heure de publication</label>
+      <input type="datetime-local" id="uploadSchedule">
+    </div>
+
+    <label>Fichier vidéo</label>
+    <input type="file" id="uploadFile" accept="video/*">
+    <div class="muted small" id="fileNameHint"></div>
+    <label>…ou lien vidéo</label>
+    <input type="url" id="uploadUrl" placeholder="https://…">
+
+    <div class="checkbox-row" id="overrideRow" hidden>
+      <input type="checkbox" id="chkOverride">
+      <label style="margin:0;">Contenu déjà autorisé — ignorer le Bouclier Copyright pour cette publication</label>
+    </div>
+
+    <div class="form-error" id="uploadError" hidden></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeUpload()">Annuler</button>
+      <button class="btn btn-accent" id="btnUploadSubmit" onclick="handleUpload()">Publier</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHIELD MODAL -->
+<div class="overlay" id="shieldModal">
+  <div class="modal-box" style="max-width:500px;">
+    <h2>🛡️ Bouclier Copyright</h2>
+    <div id="shieldBody"></div>
+  </div>
+</div>
+
+<!-- CLOUD MODAL -->
+<div class="overlay" id="syncModal">
+  <div class="modal-box">
+    <h2>💾 Stockage local</h2>
+    <p class="muted small" id="cloudStatus">Vérification de la connexion…</p>
+    <p class="muted small">Connecté à Firebase : comptes, vidéos, likes, commentaires et empreintes du Bouclier sont synchronisés en direct pour toute la classe. Storage n'étant pas activé, un fichier vidéo uploadé directement reste visible seulement sur l'appareil qui l'a publié — utilise un lien (Drive, YouTube non répertorié…) pour qu'il soit regardable par tout le monde. Exporte une sauvegarde JSON de temps en temps par précaution.</p>
+    <button class="btn btn-accent" style="width:100%" onclick="exportData()">Exporter une sauvegarde JSON</button>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSync()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+if(typeof firebase==='undefined'){
+  document.getElementById('firebaseLoadError').style.display='block';
+  throw new Error('Firebase SDK non chargé — voir le message affiché à la personne.');
+}
+</script>
+<script>
+/* ============ CONFIG — FIREBASE ============
+   Authentification par email/mot de passe + Firestore pour tout ce qui est partagé (comptes,
+   vidéos, likes, commentaires, empreintes, journal). Storage n'est pas activé (offre payante) :
+   un fichier vidéo uploadé directement reste local à l'appareil qui l'a publié — voir openWatch.
+   Un lien (Drive, YouTube non répertorié…) reste le seul moyen de partager le FICHIER vidéo
+   lui-même avec toute la classe. */
+const firebaseConfig = {
+  apiKey: "AIzaSyChOHQBMBgoDg3bSPHiyzhJiyYytR_4v7Q",
+  authDomain: "neuf-d942d.firebaseapp.com",
+  projectId: "neuf-d942d",
+  storageBucket: "neuf-d942d.firebasestorage.app",
+  messagingSenderId: "75767666720",
+  appId: "1:75767666720:web:41d41ccb6ff97521f50445"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+// Certains réseaux (wifi d'école, filtrage réseau…) bloquent la connexion en flux continu que Firestore
+// utilise par défaut, tout en laissant passer les requêtes classiques. On bascule automatiquement sur une
+// connexion classique (long-polling) si le flux continu ne fonctionne pas, pour rester compatible partout.
+db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+const ADMIN_NAME = 'Moi'; // nom de chaîne du compte admin
+const ADMIN_EMAIL = 'mohamedhadylareweldiallo@gmail.com'; // seul compte avec ce droit dans les règles de sécurité Firestore
+
+/* ============ HELPERS ============ */
+function $(id){ return document.getElementById(id); }
+function val(id){ const el=$(id); return el?el.value:''; }
+function esc(str){ return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fileToDataUrl(file, maxDim){ // redimensionne une image en data URL (pour les pochettes, reste léger dans localStorage)
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1, maxDim/Math.max(img.width,img.height));
+      const w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('image invalide')); };
+    img.src=url;
+  });
+}
+function initials(name){ return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+function formatDuration(sec){ if(sec===null||sec===undefined||!isFinite(sec)) return ''; sec=Math.round(sec); const m=Math.floor(sec/60), s=sec%60; return m+':'+String(s).padStart(2,'0'); }
+function timeAgo(ts){
+  const diff=Date.now()-ts, min=Math.floor(diff/60000);
+  if(min<1) return "à l'instant";
+  if(min<60) return 'il y a '+min+' min';
+  const h=Math.floor(min/60); if(h<24) return 'il y a '+h+' h';
+  const d=Math.floor(h/24); if(d<7) return 'il y a '+d+' j';
+  const w=Math.floor(d/7); if(w<5) return 'il y a '+w+' sem.';
+  return 'il y a '+Math.floor(d/30)+' mois';
+}
+function playIconSvg(){ return '<svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><path d="M9.5 8.3v7.4a.6.6 0 0 0 .93.5l6-3.7a.6.6 0 0 0 0-1l-6-3.7a.6.6 0 0 0-.93.5Z" fill="rgba(255,255,255,.75)"/></svg>'; }
+
+let toastTimer=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3400); }
+
+
+/* ============ CRYPTO — empreinte exacte du fichier (SHA-256) ============ */
+async function sha256Hex(buffer){ const h=await crypto.subtle.digest('SHA-256', buffer); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function hashFile(file){
+  if(file.size<=FP_LARGE_FILE) return sha256Hex(await file.arrayBuffer());
+  // Gros fichier (film) : impossible de tout charger en mémoire → empreinte = taille + 3 blocs de 8 Mo (début, milieu, fin).
+  // Deux copies identiques donnent toujours la même empreinte ; la détection visuelle reste, elle, complète.
+  const B=8*1024*1024, mid=Math.floor(file.size/2)-B/2, parts=[new TextEncoder().encode('L'+file.size+':')];
+  for(const st of [0, Math.max(0,mid), file.size-B]) parts.push(await file.slice(st, st+B).arrayBuffer());
+  return 'L:'+await sha256Hex(await new Blob(parts).arrayBuffer());
+}
+
+/* ============ EMPREINTE PERCEPTUELLE — reconnaît une vidéo réencodée / recompressée… et même un EXTRAIT ============ */
+/* Principe : on prend 2 images par seconde de la vidéo (empreinte dHash de 64 bits par image).
+   Pour comparer, on fait glisser la séquence de la vidéo testée sur celle de l'original à tous les décalages possibles
+   et on cherche une suite d'images qui concordent : un extrait (même de quelques secondes) retrouve sa place dans l'original,
+   et l'original retrouve sa place dans une vidéo plus longue (compilation, montage…). */
+const FP_TICK = 0.5;               // intervalle de base entre 2 images : 0,5 s (2 images/s) → décalage max ≈ 0,25 s si l'extrait est coupé « entre deux »
+const FP_MAX_FRAMES = 8000;        // ≈ 66 min à 2 images/s ; au-delà l'intervalle s'allonge (1 s pour un film de 2 h, 1,5 s pour 3 h…)
+const FP_LONG_SECONDS = 600;       // au-delà de 10 min : analyse par lecture accélérée ×16 (bien plus rapide que des sauts)
+const FP_PLAY_RATE = 16;
+const FP_CANDIDATES = 16;          // nombre max de correspondances gardées par image (évite l'explosion mémoire sur les films)
+const FP_LARGE_FILE = 256*1024*1024; // au-delà : empreinte exacte « échantillonnée » (un film de 2 h ne tient pas en mémoire)
+const FP_OFFSET = 0.25;            // 1re image à 0,25 s (évite le fondu noir du tout début)
+const FP_FRAME_THRESHOLD = 14;     // distance de Hamming max (sur 64 bits) pour dire « même image »
+const FP_AVG_THRESHOLD = 11;       // distance moyenne max sur tout l'extrait retrouvé
+const FP_MIN_SECONDS = 6;          // durée minimale d'extrait retrouvé pour bloquer (image en mouvement)
+const FP_MIN_SECONDS_STATIC = 30;  // idem si l'image bouge à peine (plan fixe) → évite les faux positifs
+const FP_MAX_GAP = 3;              // trou toléré (en secondes) dans un extrait (image floue, coupure…)
+const FP_MIN_COUNT = 3;            // nombre minimal d'images concordantes
+const FP_STATIC_CHANGE = 3;        // variation moyenne (bits) entre 2 images consécutives en dessous de laquelle le plan est jugé « fixe »
+const THUMB_FRACTION = 0.5;        // miniature prise au milieu de la vidéo
+/* Ancien système (9 images à positions relatives) — gardé uniquement pour les anciennes empreintes */
+const FP_SAMPLE_POINTS = [0.08,0.18,0.28,0.38,0.50,0.62,0.72,0.82,0.92];
+const VISUAL_MATCH_THRESHOLD = 10;
+
+/* ---- Empreinte AUDIO (musique) : 9 bandes de fréquence x 8 tranches temporelles, comparaison ENTRE BANDES (robuste à un léger décalage de phase, contrairement à une comparaison dans le temps) ---- */
+const AH_BANDS = [100,160,260,420,680,1100,1800,2900,4700]; // 9 bandes log-espacées (voix/instruments)
+const AH_FRAME_THRESHOLD = 16;     // distance de Hamming max (sur 64 bits) pour dire « même instant sonore »
+const AH_AVG_THRESHOLD = 13;       // distance moyenne max sur tout l'extrait retrouvé
+const AH_MAX_DURATION = 1800;      // au-delà de 30 min, l'empreinte audio n'est plus calculée (mémoire du décodage) — l'empreinte visuelle reste active
+const AH_MAX_FILE = 150*1024*1024; // idem, par taille de fichier
+
+function gridToHashHex(gray, w, h){ // grille w x h -> 64 bits (h lignes x (w-1) comparaisons) -> 16 caractères hex
+  const bits=[];
+  for(let row=0; row<h; row++) for(let col=0; col<w-1; col++) bits.push(gray[row*w+col] > gray[row*w+col+1] ? 1:0);
+  let hex='';
+  for(let i=0;i<bits.length;i+=4) hex += ((bits[i]<<3)|(bits[i+1]<<2)|(bits[i+2]<<1)|bits[i+3]).toString(16);
+  return hex;
+}
+function dHashFrame(videoEl){
+  const w=9,h=8;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(videoEl,0,0,w,h);
+  const data=ctx.getImageData(0,0,w,h).data; // lève une erreur si la vidéo est cross-origin sans CORS (canvas "sali")
+  const gray=new Array(w*h);
+  for(let i=0;i<w*h;i++) gray[i]=data[i*4]*0.299+data[i*4+1]*0.587+data[i*4+2]*0.114;
+  return gridToHashHex(gray,w,h); // 64 bits = 16 caractères hex
+}
+function goertzelEnergy(samples, start, len, freq, sr){
+  const w=2*Math.PI*freq/sr, cw=Math.cos(w), c=2*cw;
+  let s0=0,s1=0,s2=0;
+  const end=Math.min(samples.length, start+len);
+  for(let i=Math.max(0,start); i<end; i++){ s0=samples[i]+c*s1-s2; s2=s1; s1=s0; }
+  return (s1*s1+s2*s2-c*s1*s2)/Math.max(1,len);
+}
+function dHashAudioWindow(samples, sr, startSample, windowLen){
+  const w=AH_BANDS.length, h=8, grid=new Array(w*h);
+  const slice=windowLen/h;
+  for(let t=0;t<h;t++){
+    const st=startSample+Math.floor(t*slice), len=Math.max(1,Math.floor(slice));
+    for(let b=0;b<w;b++) grid[t*w+b]=Math.log(1e-6+goertzelEnergy(samples, st, len, AH_BANDS[b], sr));
+  }
+  return gridToHashHex(grid,w,h);
+}
+/* Empreinte audio v1 : { v:1, step:0.5, duration:<s>, frames:"<16 hex par tranche de 0,5 s, concaténées>" } — même format que la vidéo, réutilise denseMatch() */
+async function analyzeAudioBuffer(buf, onProgress){
+  const sr=buf.sampleRate, ch=buf.numberOfChannels, n=buf.length;
+  const mono=new Float32Array(n);
+  for(let c=0;c<ch;c++){ const d=buf.getChannelData(c); for(let i=0;i<n;i++) mono[i]+=d[i]/ch; }
+  const step=FP_TICK, windowLen=Math.round(step*sr), total=Math.max(0, Math.floor(n/windowLen)), frames=[];
+  for(let k=0;k<total;k++){
+    frames.push(dHashAudioWindow(mono, sr, k*windowLen, windowLen));
+    if(onProgress && (k&31)===0){ try{onProgress(k,total);}catch(e){} await new Promise(r=>setTimeout(r,0)); }
+  }
+  return {v:1, step, duration:buf.duration, frames:frames.join('')};
+}
+let __sharedAudioCtx=null;
+function getAudioCtx(){ return __sharedAudioCtx || (__sharedAudioCtx = new (window.AudioContext||window.webkitAudioContext)()); }
+/* Décode le fichier (musique OU piste audio d'une vidéo) et calcule son empreinte audio. Renvoie null si le fichier est trop gros/long, ou si le décodage échoue (pas de piste audio, codec non reconnu par le navigateur). */
+async function analyzeAudioFile(file, onProgress){
+  if(!file || file.size>AH_MAX_FILE) return null;
+  try{
+    const buf = await file.arrayBuffer();
+    const decoded = await getAudioCtx().decodeAudioData(buf.slice(0));
+    if(decoded.duration>AH_MAX_DURATION) return null;
+    return await analyzeAudioBuffer(decoded, onProgress);
+  }catch(e){ return null; }
+}
+function popcount32(x){
+  x = x>>>0;
+  x = x - ((x>>>1) & 0x55555555);
+  x = (x & 0x33333333) + ((x>>>2) & 0x33333333);
+  return Math.imul((x + (x>>>4)) & 0x0F0F0F0F, 0x01010101) >>> 24;
+}
+function hammingDistanceHex(a,b){
+  const ha=parseInt(a.substr(0,8),16), la=parseInt(a.substr(8,8),16), hb=parseInt(b.substr(0,8),16), lb=parseInt(b.substr(8,8),16);
+  return popcount32(ha^hb)+popcount32(la^lb);
+}
+/* Ancien comparateur (9 images, position par position) */
+function visualSimilarity(fpA, fpB){
+  if(!fpA || !fpB || fpA.length!==fpB.length || fpA.length===0) return null;
+  let total=0;
+  for(let i=0;i<fpA.length;i++) total += hammingDistanceHex(fpA[i], fpB[i]);
+  return total / fpA.length;
+}
+function legacyFramesFromDense(d){
+  const n=Math.floor(d.frames.length/16);
+  return FP_SAMPLE_POINTS.map(p=>{
+    const idx=Math.max(0, Math.min(n-1, Math.round((d.duration*p-FP_OFFSET)/d.step)));
+    return d.frames.substr(idx*16,16);
+  });
+}
+
+/* Empreinte v2 : { v:2, step:<s entre 2 images>, duration:<s>, frames:"<16 hex par image, concaténées>" } */
+function packFrames(hexStr){
+  const n=Math.floor(hexStr.length/16), out=new Uint32Array(n*2);
+  for(let i=0;i<n;i++){
+    out[2*i]=parseInt(hexStr.substr(i*16,8),16)>>>0;
+    out[2*i+1]=parseInt(hexStr.substr(i*16+8,8),16)>>>0;
+  }
+  return out;
+}
+function informativeFlags(p){
+  const n=p.length>>1, f=new Uint8Array(n);
+  for(let i=0;i<n;i++){ const pc=popcount32(p[2*i])+popcount32(p[2*i+1]); f[i]=(pc>=6 && pc<=58)?1:0; } // ignore images unies (noir, blanc…)
+  return f;
+}
+/* Cherche le meilleur extrait commun entre A (vidéo testée) et B (empreinte de l'original), quelle que soit sa position dans l'une ou l'autre. */
+function denseMatch(A,B,frameTh,avgTh){
+  frameTh = frameTh || FP_FRAME_THRESHOLD; avgTh = avgTh || FP_AVG_THRESHOLD;
+  if(!A||!B||!A.frames||!B.frames) return null;
+  const a=packFrames(A.frames), b=packFrames(B.frames);
+  const nA=a.length>>1, nB=b.length>>1;
+  const sAt=Math.max(1,Math.round((A.step||1)/FP_TICK)), sBt=Math.max(1,Math.round((B.step||1)/FP_TICK)); // pas en « ticks » de 0,5 s
+  const sA=sAt*FP_TICK, sB=sBt*FP_TICK;
+  if(!nA||!nB) return null;
+  const infoA=informativeFlags(a), infoB=informativeFlags(b);
+  const durA=A.duration||nA*sA, durB=B.duration||nB*sB;
+  const shortSec=Math.min(durA,durB);
+  const minCount=Math.max(1, Math.min(FP_MIN_COUNT, Math.floor(shortSec/Math.max(sA,sB))));
+  const gapAllowed=Math.max(FP_MAX_GAP, 2.5*Math.max(sA,sB)); // films longs : images plus espacées → trou toléré plus grand
+
+  // 1) toutes les paires d'images proches, rangées par décalage (en secondes) entre A et B
+  const map=new Map(); // décalage (en ticks de 0,5 s) -> [j, i, dist, j, i, dist, …]
+  for(let j=0;j<nA;j++){
+    if(!infoA[j]) continue;
+    const tA=j*sAt, xa=a[2*j], xb=a[2*j+1];
+    let cand=null;
+    for(let i=0;i<nB;i++){
+      if(!infoB[i]) continue;
+      const dist=popcount32(xa^b[2*i])+popcount32(xb^b[2*i+1]);
+      if(dist<=frameTh){ (cand||(cand=[])).push(dist*1000000+i); }
+    }
+    if(cand){
+      if(cand.length>FP_CANDIDATES){ cand.sort((x,y)=>x-y); cand.length=FP_CANDIDATES; } // on ne garde que les plus proches
+      for(const c of cand){
+        const i=c%1000000, dist=Math.floor(c/1000000), d=i*sBt-tA;
+        let arr=map.get(d); if(!arr){ arr=[]; map.set(d,arr); }
+        arr.push(j,i,dist);
+      }
+    }
+  }
+  // 2) pour chaque décalage (± 1 tick = ± 0,5 s pour tolérer une coupe entre deux images), on cherche la plus longue suite d'images concordantes
+  let best=null;
+  const seen=new Set();
+  for(const d0 of map.keys()){
+    if(seen.has(d0)) continue;
+    const perJ=new Map(); // j -> [i, dist]
+    for(const dd of [d0-1,d0,d0+1]){
+      const arr=map.get(dd); if(!arr) continue;
+      for(let k=0;k<arr.length;k+=3){
+        const j=arr[k], i=arr[k+1], dist=arr[k+2], cur=perJ.get(j);
+        if(!cur || dist<cur[1]) perJ.set(j,[i,dist]);
+      }
+    }
+    if(perJ.size<minCount) continue;
+    const js=Array.from(perJ.keys()).sort((x,y)=>x-y);
+    let run=[js[0]];
+    const evalRun=(r)=>{
+      if(r.length<minCount) return;
+      const span=(r[r.length-1]-r[0])*sA+sA;
+      let sumDist=0, change=0;
+      for(let k=0;k<r.length;k++){
+        const [i,dist]=perJ.get(r[k]); sumDist+=dist;
+        if(k>0){ const ip=perJ.get(r[k-1])[0]; change+=popcount32(b[2*ip]^b[2*i])+popcount32(b[2*ip+1]^b[2*i+1]); }
+      }
+      const avgDist=sumDist/r.length, avgChange=r.length>1?change/(r.length-1):0;
+      const isStatic = avgChange<FP_STATIC_CHANGE;
+      const need = isStatic ? Math.min(FP_MIN_SECONDS_STATIC, Math.max(10, shortSec*0.9))   // plan quasi fixe : on exige beaucoup plus
+                            : Math.min(FP_MIN_SECONDS, Math.max(2, shortSec*0.6));
+      if(avgDist<=avgTh && span>=need && (!best || span>best.span)){
+        best={span, count:r.length, avgDist, testStart:r[0]*sA, refStart:perJ.get(r[0])[0]*sB, testDuration:durA};
+      }
+    };
+    for(let k=1;k<js.length;k++){
+      if((js[k]-js[k-1])*sA<=gapAllowed) run.push(js[k]);
+      else { evalRun(run); run=[js[k]]; }
+    }
+    evalRun(run);
+    seen.add(d0);
+  }
+  return best;
+}
+
+/* ============ ANALYSE VIDÉO — miniature + durée + empreinte perceptuelle en une seule passe ============ */
+/* Vidéos courtes/moyennes : on « saute » de seconde en seconde (précis). Films longs (> 10 min) : lecture accélérée ×16 et on
+   prélève les images au passage — beaucoup plus rapide qu'un saut par image sur un fichier de 1-2 h. */
+function analyzeVideo(src, onProgress){
+  return new Promise((resolve)=>{
+    const v=document.createElement('video');
+    v.crossOrigin='anonymous'; v.muted=true; v.playsInline=true; v.preload='auto';
+    v.style.position='fixed'; v.style.left='-9999px'; v.style.width='2px'; v.style.height='2px';
+    let done=false, duration=null, idx=0, total=0, step=1, frames=[], thumb=null, tainted=false, stall=null, mode='seek';
+    const build=()=>({
+      thumb, duration,
+      complete: total>0 && frames.length>=total*0.98,
+      visualHash: (duration!==null && !tainted && frames.length>0) ? {v:2, step, duration:Math.round(duration*10)/10, frames:frames.join('')} : null
+    });
+    const finish=(result)=>{ if(done)return; done=true; clearTimeout(stall); try{v.pause();}catch(e){} v.removeAttribute('src'); v.remove(); resolve(result); };
+    // rien ne bouge depuis 30 s → on rend ce qu'on a (sauf si l'onglet est en arrière-plan : le navigateur gèle alors la vidéo, on attend)
+    const arm=()=>{ clearTimeout(stall); stall=setTimeout(()=>{ if(document.hidden) arm(); else finish(build()); }, 30000); };
+    const report=()=>{ if(onProgress){ try{ onProgress(Math.min(idx,total), total, mode); }catch(e){} } };
+    const grabFrame=()=>{ // renvoie le hash de l'image courante (et prend la miniature au milieu de la vidéo)
+      if(tainted) return null;
+      try{
+        const h=dHashFrame(v);
+        if(!thumb && v.currentTime>=duration*THUMB_FRACTION-0.5){
+          const c=document.createElement('canvas'); c.width=480; c.height=270;
+          c.getContext('2d').drawImage(v,0,0,480,270);
+          thumb=c.toDataURL('image/jpeg',0.7);
+        }
+        return h;
+      }catch(e){ tainted=true; frames=[]; return null; }
+    };
+    v.addEventListener('loadedmetadata',()=>{
+      duration=isFinite(v.duration)?v.duration:null;
+      if(!duration){ finish({thumb:null,duration:null,visualHash:null}); return; }
+      step=Math.max(1, Math.ceil(duration/FP_TICK/FP_MAX_FRAMES))*FP_TICK;
+      total=Math.max(1, Math.floor((duration-FP_OFFSET-0.05)/step)+1);
+      if(duration>FP_LONG_SECONDS && 'requestVideoFrameCallback' in v) startPlayback(); else seekNext();
+    });
+    /* --- mode « sauts » --- */
+    function seekNext(){
+      mode='seek';
+      if(idx>=total){ finish(build()); return; }
+      arm();
+      const t=Math.max(0, Math.min(duration-0.05, idx*step+FP_OFFSET));
+      try{ v.currentTime=t; }catch(e){ finish(build()); }
+    }
+    v.addEventListener('seeked',()=>{
+      if(done || mode!=='seek') return;
+      const h=grabFrame(); if(h!==null) frames.push(h);
+      idx++; report();
+      seekNext();
+    });
+    /* --- mode « lecture accélérée » (films longs) --- */
+    function startPlayback(){
+      mode='play';
+      const onFrame=(now,meta)=>{
+        if(done) return;
+        arm();
+        const tm=meta.mediaTime, target=idx*step+FP_OFFSET;
+        if(tm-target > Math.max(2, 3*step)){ // on a « sauté » trop loin (onglet gelé, lecture saccadée) → on revient à la bonne position
+          try{ v.currentTime=Math.max(0,target-0.5); }catch(e){}
+          v.requestVideoFrameCallback(onFrame); return;
+        }
+        if(tm>=target){
+          const h=grabFrame();
+          while(idx<total && idx*step+FP_OFFSET<=tm){ if(h!==null) frames.push(h); idx++; }
+          report();
+        }
+        if(idx>=total){ finish(build()); return; }
+        v.requestVideoFrameCallback(onFrame);
+      };
+      try{ v.currentTime=Math.max(0, FP_OFFSET-0.5); }catch(e){}
+      v.playbackRate=FP_PLAY_RATE;
+      v.requestVideoFrameCallback(onFrame);
+      arm();
+      v.play().catch(()=>{ if(!done && mode==='play' && idx===0){ mode='seek'; seekNext(); } }); // lecture refusée → repli sur les sauts
+    }
+    v.addEventListener('ended',()=>{ if(mode==='play') finish(build()); });
+    v.addEventListener('error',()=>finish({thumb:null,duration:null,visualHash:null}));
+    arm();
+    document.body.appendChild(v);
+    v.src=src;
+  });
+}
+
+
+/* ============ ÉTAT — stockage local (localStorage + IndexedDB pour les fichiers vidéo) ============ */
+let videos = [];
+let fingerprints = [];
+let blockLog = [];
+let users = []; // comptes de classe, synchronisés en direct depuis Firestore : {id(=uid), name, pic, createdAt}
+let currentUser = null; // nom de chaîne affiché
+let currentAccountId = null; // uid Firebase Auth du compte de classe connecté — null pour l'admin
+let currentView = 'home';
+let currentWatchId = null;
+let currentObjectUrl = null;
+let unsubVideos=null, unsubUsers=null, unsubFingerprints=null, unsubBlockLog=null;
+
+function newId(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id'+Date.now()+Math.random().toString(16).slice(2); }
+function isAdminAuthed(){ return !!auth.currentUser && auth.currentUser.email===ADMIN_EMAIL; }
+function myKey(){ return currentAccountId || ADMIN_NAME; } // identifiant d'auteur stable : uid pour un compte de classe, 'Moi' pour l'admin
+function findUserByEmail(email){ return users.find(u=>u.email===(email||'').toLowerCase()); }
+function findUserById(id){ return users.find(u=>u.id===id); }
+function findUserByName(name){ return users.find(u=>u.name===name); }
+function displayNameFor(authorId){ if(authorId===ADMIN_NAME) return ADMIN_NAME; const u=findUserById(authorId); return u ? u.name : '(compte supprimé)'; }
+function isVideoOwner(v){ return v.authorId===myKey(); }
+
+/* Avatars : image de profil si le compte en a une, sinon initiales. Reçoit un authorId (uid ou 'Moi'). */
+function avatarHtml(authorId, cls){
+  const u = authorId===ADMIN_NAME ? null : findUserById(authorId);
+  if(u && u.pic) return '<img class="'+cls+'" src="'+u.pic+'" style="display:block;object-fit:cover;" alt="">';
+  return '<div class="'+cls+'">'+esc(initials(displayNameFor(authorId)))+'</div>';
+}
+function setAvatarNode(el, authorId){
+  const u = authorId===ADMIN_NAME ? null : findUserById(authorId);
+  if(u && u.pic){ el.innerHTML='<img src="'+u.pic+'" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">'; }
+  else { el.innerHTML=''; el.textContent=initials(displayNameFor(authorId)); }
+}
+
+/* ============ SYNCHRONISATION FIRESTORE (temps réel) ============ */
+function attachListeners(){
+  if(unsubVideos) return; // déjà attaché
+  unsubVideos = db.collection('videos').orderBy('createdAt','desc').onSnapshot(snap=>{
+    videos = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    rerenderCurrentView();
+  }, err=>{ console.error(err); toast('Erreur de synchronisation des vidéos : '+err.message); });
+  unsubUsers = db.collection('users').onSnapshot(snap=>{
+    users = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(currentAccountId){ // couvre le cas où onAuthStateChanged se déclenche avant l'écriture du profil par doSignup
+      const me=findUserById(currentAccountId);
+      if(me && currentUser!==me.name){ currentUser=me.name; updateIdentityPill(); }
+    }
+    renderRailFriends();
+    rerenderCurrentView();
+  }, err=>console.error(err));
+  unsubFingerprints = db.collection('fingerprints').onSnapshot(snap=>{
+    fingerprints = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    refreshShieldLists();
+  }, err=>console.error(err));
+  if(isAdminAuthed()){
+    unsubBlockLog = db.collection('blockLog').orderBy('ts','desc').limit(50).onSnapshot(snap=>{
+      blockLog = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      refreshShieldLists();
+    }, err=>console.error(err));
+  }
+}
+function detachListeners(){
+  [unsubVideos,unsubUsers,unsubFingerprints,unsubBlockLog].forEach(u=>{ if(u) u(); });
+  unsubVideos=unsubUsers=unsubFingerprints=unsubBlockLog=null;
+  videos=[]; users=[]; fingerprints=[]; blockLog=[];
+}
+async function logBlock(entry){
+  try{ await db.collection('blockLog').add({...entry, ts:Date.now()}); }catch(e){ console.error(e); }
+}
+
+/* Fichiers vidéo : stockés dans IndexedDB (trop gros pour localStorage) */
+function openFilesDb(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open('neuf_files',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('files');
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+  });
+}
+async function putFile(id, blob){
+  const idb=await openFilesDb();
+  return new Promise((res,rej)=>{ const tx=idb.transaction('files','readwrite'); tx.objectStore('files').put(blob,id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+}
+async function getFile(id){
+  const idb=await openFilesDb();
+  return new Promise((res,rej)=>{ const rq=idb.transaction('files','readonly').objectStore('files').get(id); rq.onsuccess=()=>res(rq.result||null); rq.onerror=()=>rej(rq.error); });
+}
+async function deleteFile(id){
+  const idb=await openFilesDb();
+  return new Promise((res,rej)=>{ const tx=idb.transaction('files','readwrite'); tx.objectStore('files').delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+}
+
+let currentChannelKey=null;
+function rerenderCurrentView(){
+  if(currentView==='home') renderHome();
+  else if(currentView==='channel') openChannel(currentChannelKey);
+  else if(currentView==='studio') renderStudio();
+  else if(currentView==='watch' && currentWatchId){
+    const v=videos.find(x=>x.id===currentWatchId);
+    if(v) renderWatchSkeleton(v);
+  }
+}
+function setCloudStatus(ok){
+  const el=$('cloudStatus'); if(!el) return;
+  el.textContent = ok ? '☁️ Connecté à Firebase — comptes, vidéos, likes, commentaires et empreintes sont synchronisés en direct pour toute la classe.' : '⚠️ Connexion à Firebase indisponible pour le moment.';
+}
+
+/* ============ VISIBILITÉ ============ */
+function visibleTo(v){
+  if(v.visibility==='private') return v.authorId===myKey();
+  if(v.visibility==='scheduled'){
+    const due=new Date(v.scheduledTime).getTime();
+    if(Date.now()<due) return v.authorId===myKey();
+  }
+  return true;
+}
+
+/* ============ ROUTING ============ */
+function switchView(name){
+  currentView=name;
+  $('viewHome').hidden = name!=='home';
+  $('viewWatch').hidden = name!=='watch';
+  $('viewChannel').hidden = name!=='channel';
+  $('viewStudio').hidden = name!=='studio';
+  document.querySelectorAll('.rail-item,.rail-friend').forEach(el=>el.classList.remove('active'));
+  if(name==='home') $('railHome').classList.add('active');
+  if(name==='studio') $('railStudio').classList.add('active');
+  window.scrollTo(0,0);
+  $('rail').classList.remove('open');
+}
+function goHome(){ switchView('home'); renderHome(); }
+
+/* ============ RAIL ============ */
+function renderRailFriends(){
+  const entries = [{key:ADMIN_NAME,name:ADMIN_NAME}, ...users.map(u=>({key:u.id,name:u.name}))];
+  $('railFriends').innerHTML = entries.map(({key,name})=>
+    '<button class="rail-friend" data-key="'+esc(key)+'" onclick="openChannel(\''+key.replace(/'/g,"\\'")+'\')">'
+    +avatarHtml(key,'rail-avatar')+'<span>'+esc(name)+'</span></button>'
+  ).join('');
+}
+
+/* ============ HOME ============ */
+function cardHtml(v){
+  const badge = v.visibility==='private' ? '<span class="card-badge private">🔒 Privé</span>'
+    : (v.visibility==='scheduled' && new Date(v.scheduledTime).getTime()>Date.now())
+      ? '<span class="card-badge scheduled">⏰ '+new Date(v.scheduledTime).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>' : '';
+  const dur = v.durationSeconds ? '<span class="duration-badge">'+formatDuration(v.durationSeconds)+'</span>' : '';
+  const thumbInner = v.thumb ? '<img src="'+v.thumb+'" alt="">' : '<div class="thumb-fallback">'+playIconSvg()+'</div>';
+  const authorName = displayNameFor(v.authorId);
+  return '<div class="card" onclick="openWatch(\''+v.id+'\')">'
+    +'<div class="card-thumb">'+thumbInner+badge+dur+'</div>'
+    +'<div class="card-meta">'+avatarHtml(v.authorId,'card-avatar')
+    +'<div><div class="card-title">'+esc(v.title)+'</div>'
+    +'<div class="card-sub">'+esc(authorName)+' • '+(v.views||0)+' vues • '+timeAgo(v.createdAt)+'</div></div></div></div>';
+}
+function renderHome(){
+  const term = val('searchInput').trim().toLowerCase();
+  const list = videos.filter(v=>visibleTo(v))
+    .filter(v=> !term || (v.title+' '+v.desc+' '+displayNameFor(v.authorId)).toLowerCase().includes(term))
+    .sort((a,b)=>b.createdAt-a.createdAt);
+  const grid=$('homeGrid'), empty=$('homeEmpty');
+  if(list.length===0){
+    grid.innerHTML=''; grid.hidden=true; empty.hidden=false;
+    empty.textContent = term ? 'Aucune vidéo ne correspond à « '+term+' ».' : "Aucune vidéo pour l'instant — publie la première !";
+    return;
+  }
+  empty.hidden=true; grid.hidden=false;
+  grid.innerHTML = list.map(cardHtml).join('');
+}
+
+/* ============ CHANNEL ============ */
+function openChannel(key){
+  switchView('channel');
+  currentChannelKey=key;
+  $('channelTitle').textContent=displayNameFor(key);
+  setAvatarNode($('channelAvatar'), key);
+  const list = videos.filter(v=>v.authorId===key && visibleTo(v)).sort((a,b)=>b.createdAt-a.createdAt);
+  $('channelCount').textContent = list.length+' vidéo'+(list.length>1?'s':'');
+  const grid=$('channelGrid'), empty=$('channelEmpty');
+  if(list.length===0){ grid.innerHTML=''; grid.hidden=true; empty.hidden=false; }
+  else { empty.hidden=true; grid.hidden=false; grid.innerHTML=list.map(cardHtml).join(''); }
+  document.querySelectorAll('.rail-friend').forEach(el=>el.classList.toggle('active', el.dataset.key===key));
+}
+
+/* ============ WATCH ============ */
+async function openWatch(id){
+  const v = videos.find(x=>x.id===id);
+  if(!v) return;
+  if(!visibleTo(v)){ toast("Cette vidéo n'est pas disponible."); return; }
+  currentWatchId=id;
+  switchView('watch');
+  renderWatchSkeleton(v);
+  if(currentObjectUrl){ URL.revokeObjectURL(currentObjectUrl); currentObjectUrl=null; }
+  const player=$('playerVideo');
+  if(v.sourceType==='file'){
+    try{
+      const blob = await getFile(id);
+      if(!blob){
+        player.removeAttribute('src'); player.load();
+        showWatchNotice('📵 Cette vidéo a été publiée par fichier depuis un autre appareil. Sans espace de stockage partagé (Firebase Storage, non activé), seul cet appareil peut la lire. Demande à '+displayNameFor(v.authorId)+' de la republier avec un lien (Drive, YouTube non répertorié…) pour que tout le monde puisse la voir.');
+        return;
+      }
+      if(currentWatchId!==id) return;
+      currentObjectUrl = URL.createObjectURL(blob);
+      player.src = currentObjectUrl;
+    }catch(e){ console.error(e); showWatchNotice('Impossible de lire cette vidéo sur cet appareil.'); return; }
+  } else {
+    player.src = v.url;
+  }
+  hideWatchNotice();
+  const dayKey=new Date().toISOString().slice(0,10);
+  db.collection('videos').doc(id).update({
+    views: firebase.firestore.FieldValue.increment(1),
+    ['viewLog.'+dayKey]: firebase.firestore.FieldValue.increment(1)
+  }).catch(e=>console.error(e));
+}
+function showWatchNotice(msg){
+  let n=$('watchNotice');
+  if(!n){ n=document.createElement('div'); n.id='watchNotice'; n.className='form-error'; n.style.margin='10px 0'; $('playerVideo').insertAdjacentElement('afterend', n); }
+  n.textContent=msg; n.hidden=false;
+}
+function hideWatchNotice(){ const n=$('watchNotice'); if(n) n.hidden=true; }
+function renderWatchSkeleton(v){
+  $('watchTitle').textContent=v.title;
+  setAvatarNode($('watchChannelAvatar'), v.authorId);
+  $('watchChannelNameText').textContent=displayNameFor(v.authorId);
+  $('watchChannelName').onclick=()=>openChannel(v.authorId);
+  $('watchMeta').textContent=(v.views||0)+' vues • '+timeAgo(v.createdAt);
+  $('watchDesc').textContent=v.desc||'Aucune description.';
+  $('playerVideo').poster=v.thumb||'';
+  updateLikeButton(v);
+  renderComments(v);
+  $('watchDeleteBtn').hidden = !(isAdminAuthed() || isVideoOwner(v));
+}
+function updateLikeButton(v){
+  const btn=$('watchLikeBtn');
+  const liked=(v.likedBy||[]).includes(myKey());
+  btn.classList.toggle('active', liked);
+  btn.querySelector('.count').textContent=(v.likedBy||[]).length;
+}
+function toggleLike(){
+  const v=videos.find(x=>x.id===currentWatchId); if(!v) return;
+  const key=myKey();
+  const liked=(v.likedBy||[]).includes(key);
+  db.collection('videos').doc(v.id).update({
+    likedBy: liked ? firebase.firestore.FieldValue.arrayRemove(key) : firebase.firestore.FieldValue.arrayUnion(key)
+  }).catch(e=>console.error(e));
+  v.likedBy = liked ? (v.likedBy||[]).filter(k=>k!==key) : [...(v.likedBy||[]), key];
+  updateLikeButton(v);
+}
+function renderComments(v){
+  const comments=v.comments||[];
+  const canModerate = isAdminAuthed() || isVideoOwner(v);
+  $('commentsCount').textContent=comments.length;
+  $('commentsList').innerHTML = comments.length ? comments.slice().sort((a,b)=>a.ts-b.ts).map(c=>
+    '<div class="comment-item">'+avatarHtml(c.authorId,'comment-avatar')
+    +'<div style="flex:1;min-width:0;"><div class="comment-row-top"><div class="comment-author">'+esc(displayNameFor(c.authorId))+'<span class="comment-time">'+timeAgo(c.ts)+'</span></div>'
+    +(canModerate ? '<button class="comment-del" title="Supprimer ce commentaire" onclick="deleteComment(\''+(c.id||c.ts)+'\')">🗑️</button>' : '')
+    +'</div><div class="comment-text">'+esc(c.text)+'</div></div></div>'
+  ).join('') : '<p class="muted small">Aucun commentaire pour l\'instant.</p>';
+}
+function sendComment(){
+  const input=$('commentInput'); const text=input.value.trim();
+  if(!text) return;
+  const v=videos.find(x=>x.id===currentWatchId); if(!v) return;
+  input.value='';
+  const comment={id:newId(), authorId:myKey(), text, ts:Date.now()};
+  db.collection('videos').doc(v.id).update({ comments: firebase.firestore.FieldValue.arrayUnion(comment) }).catch(e=>{ console.error(e); toast('Erreur : commentaire non envoyé.'); });
+  v.comments=[...(v.comments||[]), comment];
+  renderComments(v);
+}
+function deleteComment(commentKey){
+  const v=videos.find(x=>x.id===currentWatchId); if(!v) return;
+  if(!(isAdminAuthed() || isVideoOwner(v))) return;
+  if(!confirm('Supprimer ce commentaire ?')) return;
+  const newComments = (v.comments||[]).filter(c=>String(c.id||c.ts)!==String(commentKey));
+  db.collection('videos').doc(v.id).update({ comments:newComments }).catch(e=>{ console.error(e); toast('Erreur lors de la suppression.'); });
+  v.comments=newComments;
+  renderComments(v);
+  toast('Commentaire supprimé.');
+}
+/* ============ SUPPRESSION DE VIDÉO ============
+   L'auteur peut supprimer sa propre vidéo. L'administrateur peut supprimer n'importe
+   quelle vidéo, pour n'importe quel motif — un motif facultatif est demandé pour garder
+   une trace dans le journal du Bouclier quand ce n'est pas sa propre vidéo. */
+async function deleteVideo(id, opts){
+  opts = opts||{};
+  const v = videos.find(x=>x.id===id); if(!v) return false;
+  const isOwner = isVideoOwner(v);
+  if(!(isAdminAuthed() || isOwner)) return false;
+  let reason=null;
+  if(isAdminAuthed() && !isOwner){
+    reason = prompt('Motif de la suppression (facultatif) :','') || '(non précisé)';
+    if(reason===null) return false;
+  } else if(!confirm('Supprimer définitivement « '+v.title+' » ?')){
+    return false;
+  }
+  try{ await db.collection('videos').doc(id).delete(); }
+  catch(e){ console.error(e); toast('Échec de la suppression : '+e.message); return false; }
+  if(v.sourceType==='file'){ try{ await deleteFile(id); }catch(e){ console.error(e); } }
+  if(isAdminAuthed() && !isOwner){
+    logBlock({authorId:myKey(), title:v.title, source:displayNameFor(v.authorId), reason:'Vidéo supprimée par l\'administrateur — motif : '+reason, matchLabel:''});
+  }
+  return true;
+}
+async function deleteCurrentVideo(){
+  if(!currentWatchId) return;
+  const id=currentWatchId;
+  const ok = await deleteVideo(id);
+  if(ok){ toast('Vidéo supprimée.'); goHome(); }
+}
+
+/* ============ BOUCLIER COPYRIGHT — vérification ============ */
+function checkCopyright({url,title,desc,fileHash,visualHash,audioHash}){
+  const text=(url+' '+title+' '+desc).toLowerCase();
+  const isBlocking=fp=>(fp.enforcement||'bloquant')!=='signalement';
+  const mk=(kind, reason, fp, cutInfo)=>({blocked:isBlocking(fp), flagged:!isBlocking(fp), kind, reason, match:fp, cutInfo:cutInfo||null});
+
+  const kw = fingerprints.find(fp=>fp.type==='keyword' && text.includes(fp.value));
+  if(kw) return mk(kw.worktype||'video','Correspondance mot-clé / lien', kw, null);
+
+  if(fileHash){
+    const hm = fingerprints.find(fp=>fp.type==='file' && fp.exactHash && fp.exactHash===fileHash);
+    if(hm) return mk(hm.worktype||'video','Empreinte de fichier identique — copie complète', hm, null);
+  }
+
+  // Correspondance IMAGE (une œuvre audiovisuelle enregistrée avec son empreinte visuelle)
+  let bestVisual=null;
+  if(visualHash){
+    for(const fp of fingerprints){
+      if(fp.type!=='file' || fp.worktype==='audio' || !fp.visualHash) continue;
+      if(Array.isArray(fp.visualHash)){ // ancienne empreinte (9 images) : copie complète uniquement
+        const dist = visualSimilarity(legacyFramesFromDense(visualHash), fp.visualHash);
+        if(dist!==null && dist<=VISUAL_MATCH_THRESHOLD && (!bestVisual || bestVisual.m.span<Infinity)) bestVisual={fp, m:{legacy:true, dist, span:Infinity}};
+      } else if(fp.visualHash.v===2){
+        const m=denseMatch(visualHash, fp.visualHash);
+        if(m && (!bestVisual || m.span>bestVisual.m.span)) bestVisual={fp, m};
+      }
+    }
+  }
+  // Correspondance SON : musique protégée seule, OU bande son (dialogues, musique de fond) d'une œuvre audiovisuelle —
+  // une empreinte "vidéo" porte elle aussi une empreinte sonore, calculée à l'ajout. Une production a son image ET son
+  // son protégés séparément : un extrait peut être reconnu par l'un, par l'autre, ou par les deux à la fois.
+  let bestAudio=null;
+  if(audioHash){
+    for(const fp of fingerprints){
+      if(fp.type!=='file' || !fp.audioHash) continue;
+      const m=denseMatch(audioHash, fp.audioHash, AH_FRAME_THRESHOLD, AH_AVG_THRESHOLD);
+      if(m && (!bestAudio || m.span>bestAudio.m.span)) bestAudio={fp, m};
+    }
+  }
+
+  if(bestVisual){
+    const m=bestVisual.m, fp=bestVisual.fp;
+    if(m.legacy) return mk('video','Contenu visuellement très proche (probable réencodage — score '+m.dist.toFixed(1)+'/64)', fp, null);
+    const sameWorkAudio = bestAudio && bestAudio.fp.id===fp.id;
+    let start=m.testStart, end=m.testStart+m.span, reason;
+    if(sameWorkAudio){
+      // même œuvre reconnue à la fois à l'image et au son : on coupe l'ensemble de la zone concernée (les deux
+      // fenêtres ne coïncident pas forcément exactement — un morceau peut continuer après le dernier plan reconnu).
+      start=Math.min(start, bestAudio.m.testStart);
+      end=Math.max(end, bestAudio.m.testStart+bestAudio.m.span);
+      const pct=Math.min(100, Math.round((end-start)/Math.max(1,m.testDuration)*100));
+      reason='Extrait reconnu (image et son) : ~'+formatDuration(end-start)+' de contenu protégé ('+pct+' % de cette vidéo), entre '+formatDuration(start)+' et '+formatDuration(end);
+    } else {
+      const pct=Math.min(100, Math.round(m.span/Math.max(1,m.testDuration)*100));
+      reason='Extrait vidéo reconnu : ~'+formatDuration(m.span)+' de contenu protégé ('+pct+' % de cette vidéo, vers '+formatDuration(m.testStart)+', à '+formatDuration(m.refStart)+' dans l\'original)'
+        + (bestAudio ? ' — une bande son protégée distincte a aussi été repérée ailleurs dans la vidéo (« '+fpLabelSafe(bestAudio.fp)+' »)' : '');
+    }
+    const pctFinal=Math.min(100, Math.round((end-start)/Math.max(1,m.testDuration)*100));
+    return mk('video', reason, fp, {start, end, coveragePct:pctFinal});
+  }
+  if(bestAudio){
+    const m=bestAudio.m, fp=bestAudio.fp;
+    const pct=Math.min(100, Math.round(m.span/Math.max(1,m.testDuration)*100));
+    const label = fp.worktype==='audio' ? 'Musique protégée reconnue' : 'Bande son protégée reconnue (musique/dialogues d\'une œuvre audiovisuelle)';
+    return mk('audio', label+' : ~'+formatDuration(m.span)+' ('+pct+' % de la bande sonore de cette vidéo, vers '+formatDuration(m.testStart)+', à '+formatDuration(m.refStart)+' dans l\'original)', fp, {start:m.testStart, end:m.testStart+m.span, coveragePct:pct});
+  }
+  return {blocked:false};
+}
+function fpLabelSafe(fp){ return (fp&&fp.label)||''; }
+
+/* ============ UPLOAD ============ */
+let pendingUpload = null; // { title, desc, visibility, scheduledTime, url, file, fileHash, visualHash, audioHash, thumb, durationSeconds, tempUrl, check }
+
+function openUploadModal(){
+  if(!currentUser){ openIdentityModal(); return; }
+  $('uploadTitle').value=''; $('uploadDesc').value=''; $('uploadUrl').value=''; $('uploadFile').value='';
+  $('uploadVisibility').value='public'; $('scheduleRow').hidden=true; $('uploadSchedule').value='';
+  $('fileNameHint').textContent='';
+  $('uploadAsLabel').textContent=currentUser;
+  $('overrideRow').hidden = currentUser!==ADMIN_NAME;
+  $('chkOverride').checked=false;
+  pendingUpload=null;
+  hideUploadError();
+  setSubmitting(false);
+  $('uploadModal').classList.add('open');
+}
+function closeUpload(){ $('uploadModal').classList.remove('open'); }
+function showUploadError(msg){ const e=$('uploadError'); e.textContent=msg; e.hidden=false; }
+function hideUploadError(){ $('uploadError').hidden=true; }
+function setSubmitting(is, label){ const b=$('btnUploadSubmit'); b.disabled=is; b.textContent = is?(label||'Publication…'):'Publier'; }
+
+async function handleUpload(){
+  hideUploadError();
+  const title = val('uploadTitle').trim() || 'Sans titre';
+  const desc = val('uploadDesc').trim();
+  const visibility = val('uploadVisibility');
+  const scheduledTime = val('uploadSchedule');
+  const url = val('uploadUrl').trim();
+  const file = $('uploadFile').files[0] || null;
+  const override = $('chkOverride').checked && currentUser===ADMIN_NAME;
+
+  if(!file && !url){ showUploadError('Ajoute un fichier vidéo ou un lien.'); return; }
+  if(visibility==='scheduled' && !scheduledTime){ showUploadError('Choisis une date de publication.'); return; }
+
+  setSubmitting(true, 'Analyse de la vidéo…');
+  let tempUrl=null;
+  try{
+    let fileHash=null;
+    if(file){ fileHash = await hashFile(file); tempUrl = URL.createObjectURL(file); }
+
+    const analysis = await analyzeVideo(file?tempUrl:url, (i,n,m)=>setSubmitting(true,'Analyse de la vidéo… '+Math.round(i/n*100)+' %'+(m==='play'?' (film long : garde l\'onglet ouvert)':'')));
+    const thumb=analysis.thumb, durationSeconds=analysis.duration, visualHash=analysis.visualHash;
+    let audioHash=null;
+    if(file){ setSubmitting(true,'Analyse de la bande sonore…'); audioHash = await analyzeAudioFile(file); }
+
+    const ctx = {title, desc, visibility, scheduledTime, url, file, fileHash, visualHash, audioHash, thumb, durationSeconds, tempUrl};
+
+    if(!override){
+      const check = checkCopyright({url, title, desc, fileHash, visualHash, audioHash});
+      if(check.blocked){
+        pendingUpload = {...ctx, check};
+        logBlock({authorId:myKey(), title, source:file?file.name:url, reason:check.reason, matchLabel:check.match.label});
+        renderBlockPanel(check);
+        setSubmitting(false);
+        return;
+      }
+      if(check.flagged){
+        logBlock({authorId:myKey(), title, source:file?file.name:url, reason:'(signalement, non bloquant) '+check.reason, matchLabel:check.match.label});
+      }
+    }
+
+    await proceedPublish(ctx, {overrideUsed:override}, null);
+  }catch(e){
+    console.error(e);
+    if(tempUrl) URL.revokeObjectURL(tempUrl);
+    const hint = file ? ' (essaie avec un fichier plus léger, ou publie via un lien)' : ' (vérifie ta connexion internet)';
+    showUploadError('Une erreur est survenue pendant la publication.'+hint);
+    setSubmitting(false);
+  }
+}
+
+/* Panneau affiché quand une publication est bloquée : détails de l'œuvre + actions (couper / fair use). */
+function renderBlockPanel(check){
+  const dur = (pendingUpload && pendingUpload.durationSeconds) || 0;
+  const cut = check.cutInfo;
+  const cutLen = cut ? (cut.end-cut.start) : 0;
+  const canCut = !!(cut && dur>0.5 && cutLen < dur*0.92 && (dur-cutLen)>0.5 && pendingUpload && pendingUpload.file);
+  const kindLabel = check.kind==='audio' ? '🎵 Audio (musique)' : (check.kind==='video' ? '🎬 Audiovisuel' : '');
+  const m = check.match||{};
+  const details =
+    '<div id="blockDetails" hidden style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:8px;">'
+    + (m.workTitle ? '<div><strong>Œuvre :</strong> '+esc(m.workTitle)+'</div>' : '')
+    + (m.rightsHolder ? '<div><strong>Ayants droit :</strong> '+esc(m.rightsHolder)+'</div>' : '')
+    + (kindLabel ? '<div><strong>Type :</strong> '+kindLabel+'</div>' : '')
+    + (m.cover ? '<img src="'+m.cover+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;margin-top:6px;">' : '')
+    + '</div>';
+  const cutBtn = canCut
+    ? '<button type="button" class="btn btn-accent" onclick="cutAndRetryUpload()">✂️ '+(check.kind==='audio'?'Couper la musique et publier':'Couper cette partie et publier')+'</button>'
+    : '';
+  const actions = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+cutBtn
+    +'<button type="button" class="btn btn-ghost" onclick="fairUsePublish()">⚖️ Publier quand même (fair use)</button></div>';
+  const e=$('uploadError');
+  e.innerHTML = '🛡️ Publication bloquée : '+esc(check.reason)+'.'
+    + ' <button type="button" onclick="toggleBlockDetails()" style="background:none;border:none;color:inherit;text-decoration:underline;cursor:pointer;padding:0;font:inherit;">ℹ️ En savoir plus</button>'
+    + details + actions;
+  e.hidden=false;
+}
+function toggleBlockDetails(){ const d=$('blockDetails'); if(d) d.hidden=!d.hidden; }
+
+/* Publie la vidéo (utilisé par le flux normal, la découpe réussie et le fair use). */
+async function proceedPublish(ctx, opts, note){
+  opts = opts||{};
+  setSubmitting(true, 'Publication…');
+  const {title, desc, visibility, scheduledTime, url, file, fileHash, thumb, durationSeconds, tempUrl} = ctx;
+  const id = newId();
+  let sourceType, finalUrl=null;
+  if(file){
+    sourceType='file';
+    await putFile(id, file); // Storage non activé : le fichier reste sur cet appareil, voir openWatch
+    if(tempUrl) URL.revokeObjectURL(tempUrl);
+  } else {
+    sourceType='url'; finalUrl=url;
+  }
+  await db.collection('videos').doc(id).set({
+    title, desc, authorId: myKey(), visibility,
+    scheduledTime: visibility==='scheduled'?scheduledTime:null,
+    sourceType, url:finalUrl, fileName:file?file.name:null, fileHash:fileHash||null,
+    thumb:thumb||null, durationSeconds:durationSeconds||null, views:0, likedBy:[], comments:[], viewLog:{},
+    createdAt:Date.now(), overrideUsed:!!opts.overrideUsed, fairUseClaimed:!!opts.fairUseClaimed, cutApplied:!!opts.cutApplied
+  });
+  pendingUpload=null;
+  closeUpload();
+  goHome();
+  toast(note || (opts.overrideUsed ? 'Publié avec dérogation admin ✅' : (file ? 'Vidéo publiée ✅ (fichier visible sur cet appareil ; utilise un lien pour la partager à toute la classe)' : 'Vidéo publiée ✅')));
+  setSubmitting(false);
+}
+
+/* « Publier quand même » après un blocage : l'auteur invoque le fair use, c'est journalisé. */
+async function fairUsePublish(){
+  if(!pendingUpload) return;
+  const check = pendingUpload.check;
+  try{
+    await proceedPublish(pendingUpload, {fairUseClaimed:true}, 'Publié — fair use invoqué par l\'auteur ⚖️');
+    logBlock({authorId:myKey(), title:check ? check.reason : '', source:'', reason:'Fair use invoqué — publié malgré la détection'+(check?(' ('+check.reason+')'):''), matchLabel:check&&check.match?check.match.label:''});
+  }catch(e){ console.error(e); showUploadError('Erreur pendant la publication.'); setSubmitting(false); }
+}
+
+/* « Couper cette partie et publier » : ré-encode la vidéo (image+son pour un extrait vidéo, ou le son coupé seul pour de la musique), la ré-analyse, puis publie si le blocage a disparu. */
+async function cutAndRetryUpload(){
+  if(!pendingUpload || !pendingUpload.file || !pendingUpload.check || !pendingUpload.check.cutInfo) return;
+  const {file, check} = pendingUpload;
+  const cut = check.cutInfo;
+  try{
+    setSubmitting(true, (check.kind==='audio'?'Suppression de la musique protégée… ':'Découpe en cours… ')+'0 % (temps réel, garde cet onglet ouvert)');
+    const cutFn = check.kind==='audio' ? muteAudioSegment : cutVideoSegment;
+    const newBlob = await cutFn(file, cut.start, cut.end, (p)=>setSubmitting(true, (check.kind==='audio'?'Suppression de la musique protégée… ':'Découpe en cours… ')+Math.round(p*100)+' % (temps réel)'));
+    const newName = (file.name||'video').replace(/\.[^.\/]+$/,'') + (check.kind==='audio'?'-sans-musique.webm':'-coupe.webm');
+    const newFile = new File([newBlob], newName, {type:newBlob.type||'video/webm'});
+
+    setSubmitting(true, 'Nouvelle analyse…');
+    const newFileHash = await hashFile(newFile);
+    const newTempUrl = URL.createObjectURL(newFile);
+    const analysis = await analyzeVideo(newTempUrl, (i,n)=>setSubmitting(true,'Nouvelle analyse… '+Math.round(i/n*100)+' %'));
+    const newAudioHash = await analyzeAudioFile(newFile);
+
+    const recheck = checkCopyright({url:'', title:pendingUpload.title, desc:pendingUpload.desc, fileHash:newFileHash, visualHash:analysis.visualHash, audioHash:newAudioHash});
+    const newCtx = {...pendingUpload, file:newFile, fileHash:newFileHash, visualHash:analysis.visualHash, audioHash:newAudioHash, thumb:analysis.thumb, durationSeconds:analysis.duration, tempUrl:newTempUrl};
+    if(recheck.blocked){
+      pendingUpload = {...newCtx, check:recheck};
+      renderBlockPanel(recheck);
+      setSubmitting(false);
+      toast('Encore une correspondance après la découpe — vérifie le résultat.');
+      return;
+    }
+    await proceedPublish(newCtx, {cutApplied:true}, check.kind==='audio' ? 'Musique protégée coupée, vidéo publiée ✂️' : 'Extrait protégé coupé, vidéo publiée ✂️');
+  }catch(e){
+    console.error(e);
+    showUploadError("La découpe a échoué : "+e.message+" — ton navigateur ne supporte peut-être pas l'enregistrement vidéo local (MediaRecorder).");
+    setSubmitting(false);
+  }
+}
+
+/* Retire [cutStart,cutEnd] de la vidéo (image + son) en la rejouant en temps réel et en sautant ce passage. Ré-encodage en WebM (MediaRecorder). */
+function pickRecorderMime(){
+  const opts=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(const o of opts) if(window.MediaRecorder && MediaRecorder.isTypeSupported(o)) return o;
+  return '';
+}
+function cutVideoSegment(file, cutStart, cutEnd, onProgress){
+  return new Promise((resolve,reject)=>{
+    if(!window.MediaRecorder){ reject(new Error('MediaRecorder non disponible')); return; }
+    const v=document.createElement('video');
+    v.muted=false; v.playsInline=true; v.preload='auto';
+    v.style.position='fixed'; v.style.left='-9999px'; v.style.width='2px'; v.style.height='2px';
+    const url=URL.createObjectURL(file);
+    let jumped=false, recorder=null, chunks=[], done=false;
+    const cleanup=()=>{ try{v.pause();}catch(e){} URL.revokeObjectURL(url); v.remove(); };
+    v.addEventListener('loadedmetadata',()=>{
+      try{
+        const stream = v.captureStream ? v.captureStream() : v.mozCaptureStream();
+        const mime=pickRecorderMime();
+        recorder = new MediaRecorder(stream, mime?{mimeType:mime}:undefined);
+        recorder.ondataavailable=(e)=>{ if(e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop=()=>{ if(done) return; done=true; cleanup(); resolve(new Blob(chunks,{type:mime||'video/webm'})); };
+        recorder.onerror=(e)=>{ if(done) return; done=true; cleanup(); reject((e&&e.error)||new Error('erreur MediaRecorder')); };
+        recorder.start(250);
+        v.play().catch(err=>{ if(!done){ done=true; cleanup(); reject(err); } });
+      }catch(err){ cleanup(); reject(err); }
+    });
+    v.addEventListener('timeupdate',()=>{
+      if(done) return;
+      if(onProgress) try{ onProgress(Math.min(1, v.currentTime/Math.max(0.01,v.duration))); }catch(e){}
+      if(!jumped && v.currentTime>=cutStart-0.05){ jumped=true; try{ v.currentTime=Math.min(cutEnd, v.duration-0.05); }catch(e){} }
+    });
+    v.addEventListener('ended',()=>{ if(!done && recorder && recorder.state!=='inactive') recorder.stop(); });
+    v.addEventListener('error',()=>{ if(!done){ done=true; cleanup(); reject(new Error('lecture impossible')); } });
+    v.src=url;
+  });
+}
+/* Coupe le son (silence en fondu) pendant [muteStart,muteEnd], garde l'image et la durée intactes. Ré-encodage en WebM. */
+function muteAudioSegment(file, muteStart, muteEnd, onProgress){
+  return new Promise((resolve,reject)=>{
+    if(!window.MediaRecorder){ reject(new Error('MediaRecorder non disponible')); return; }
+    const v=document.createElement('video');
+    v.muted=false; v.playsInline=true; v.preload='auto';
+    v.style.position='fixed'; v.style.left='-9999px'; v.style.width='2px'; v.style.height='2px';
+    const url=URL.createObjectURL(file);
+    let recorder=null, chunks=[], done=false, audioCtx=null, gainNode=null;
+    const cleanup=()=>{ try{v.pause();}catch(e){} URL.revokeObjectURL(url); v.remove(); try{audioCtx&&audioCtx.close();}catch(e){} };
+    v.addEventListener('loadedmetadata',()=>{
+      try{
+        const raw = v.captureStream ? v.captureStream() : v.mozCaptureStream();
+        let combined = new MediaStream(raw.getVideoTracks());
+        if(raw.getAudioTracks().length){
+          audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const src = audioCtx.createMediaElementSource(v);
+          gainNode = audioCtx.createGain();
+          src.connect(gainNode);
+          const dest = audioCtx.createMediaStreamDestination();
+          gainNode.connect(dest);
+          combined = new MediaStream([...combined.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        }
+        const mime=pickRecorderMime();
+        recorder = new MediaRecorder(combined, mime?{mimeType:mime}:undefined);
+        recorder.ondataavailable=(e)=>{ if(e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop=()=>{ if(done) return; done=true; cleanup(); resolve(new Blob(chunks,{type:mime||'video/webm'})); };
+        recorder.onerror=(e)=>{ if(done) return; done=true; cleanup(); reject((e&&e.error)||new Error('erreur MediaRecorder')); };
+        recorder.start(250);
+        v.play().catch(err=>{ if(!done){ done=true; cleanup(); reject(err); } });
+      }catch(err){ cleanup(); reject(err); }
+    });
+    v.addEventListener('timeupdate',()=>{
+      if(done) return;
+      if(onProgress) try{ onProgress(Math.min(1, v.currentTime/Math.max(0.01,v.duration))); }catch(e){}
+      if(gainNode && audioCtx){
+        const t=audioCtx.currentTime, inSeg = v.currentTime>=muteStart-0.05 && v.currentTime<=muteEnd+0.05;
+        try{ gainNode.gain.setTargetAtTime(inSeg?0:1, t, 0.03); }catch(e){}
+      }
+    });
+    v.addEventListener('ended',()=>{ if(!done && recorder && recorder.state!=='inactive') recorder.stop(); });
+    v.addEventListener('error',()=>{ if(!done){ done=true; cleanup(); reject(new Error('lecture impossible')); } });
+    v.src=url;
+  });
+}
+
+$('uploadFile').addEventListener('change', ()=>{
+  const f=$('uploadFile').files[0];
+  if(f){ $('uploadUrl').value=''; $('fileNameHint').textContent=f.name; }
+  else $('fileNameHint').textContent='';
+});
+$('uploadUrl').addEventListener('input', ()=>{ if(val('uploadUrl')){ $('uploadFile').value=''; $('fileNameHint').textContent=''; } });
+$('uploadVisibility').addEventListener('change', ()=>{ $('scheduleRow').hidden = val('uploadVisibility')!=='scheduled'; });
+
+/* ============ BOUCLIER — panneau admin ============ */
+function openShield(){
+  if(isAdminAuthed()){
+    $('shieldModal').classList.add('open');
+    renderShieldContent();
+    return;
+  }
+  toast('Le Bouclier Copyright est réservé à '+ADMIN_NAME+' (connexion requise).');
+  openIdentityModal();
+}
+function closeShield(){ $('shieldModal').classList.remove('open'); }
+function shieldErrorMsg(msg){ const e=$('shieldErr'); if(e){ e.textContent=msg; e.hidden=false; } }
+
+function renderShieldContent(){
+  const body=$('shieldBody');
+  body.innerHTML =
+    '<p class="muted small">Empreintes et journal synchronisés en direct via Firebase, visibles par toute la classe (écriture réservée à l\'admin). Compte admin : '+esc(ADMIN_EMAIL)+'.</p>'
+    +'<label>Type d\'œuvre</label>'
+    +'<div class="checkbox-row" style="gap:16px;">'
+    +'<label style="margin:0;display:flex;align-items:center;gap:6px;"><input type="radio" name="fpType" id="fpTypeVideo" checked onchange="onFpTypeChange()"> 🎬 Audiovisuel (vidéo, film…)</label>'
+    +'<label style="margin:0;display:flex;align-items:center;gap:6px;"><input type="radio" name="fpType" id="fpTypeAudio" onchange="onFpTypeChange()"> 🎵 Audio (musique)</label>'
+    +'</div>'
+    +'<label>Libellé (ex. « Shorts TOMIIX »)</label><input type="text" id="fpLabel" placeholder="À quoi correspond cette empreinte ?">'
+    +'<label>Nom de l\'œuvre</label><input type="text" id="fpWorkTitle" placeholder="Ex : Fi Rihab Al-Huda">'
+    +'<label>Ayants droit</label><input type="text" id="fpRightsHolder" placeholder="Ex : UNITED Entertainment Studio">'
+    +'<label>Mode</label><select id="fpEnforcement"><option value="bloquant">🛡️ Bloquant — bloque la publication</option><option value="signalement">⚠️ Signalement seulement — publication autorisée, juste notée dans le journal</option></select>'
+    +'<label>Mot-clé / lien à surveiller (titre, description ou URL)</label><input type="text" id="fpKeyword" placeholder="Ex : tomiix">'
+    +'<div id="fpVideoRow"><label>Ou fichier vidéo original (empreinte exacte + perceptuelle — extraits reconnus)</label><input type="file" id="fpFile" accept="video/*"></div>'
+    +'<div id="fpAudioRow" hidden><label>Ou fichier audio original (empreinte perceptuelle — extraits reconnus)</label><input type="file" id="fpAudioFile" accept="audio/*">'
+    +'<label>Pochette (facultatif)</label><input type="file" id="fpCover" accept="image/*" onchange="previewFpCover(this)"><div id="fpCoverPreview" style="margin-top:6px;"></div></div>'
+    +'<div class="form-error" id="shieldErr" hidden></div>'
+    +'<button class="btn btn-accent" style="width:100%" onclick="addFingerprint()">+ Ajouter l\'empreinte</button>'
+    +'<h3 class="shield-h3">Empreintes actives ('+fingerprints.length+')</h3><div id="fpList" class="shield-list"></div>'
+    +'<h3 class="shield-h3">Journal des blocages ('+blockLog.length+')</h3><div id="blockLogList" class="shield-list"></div>'
+    +'<h3 class="shield-h3">Tester une vidéo (sans publier)</h3>'
+    +'<label>Titre / lien à tester (mots-clés)</label><input type="text" id="testMeta" placeholder="Ex : titre ou URL à vérifier">'
+    +'<label>Fichier à tester (empreintes)</label><input type="file" id="testFile" accept="video/*">'
+    +'<button class="btn btn-ghost" style="width:100%" onclick="runShieldTest()">Vérifier</button>'
+    +'<div id="testResult" class="muted small" style="margin-top:6px;"></div>'
+    +'<h3 class="shield-h3">Compte admin</h3>'
+    +'<button class="btn btn-ghost" style="width:100%" onclick="adminLogout()">Se déconnecter du compte admin</button>'
+    +'<div class="modal-actions"><button class="btn btn-ghost" onclick="closeShield()">Fermer</button></div>';
+  renderFingerprintsList();
+  renderBlockLogList();
+}
+async function runShieldTest(){
+  const file = $('testFile').files[0];
+  const meta = val('testMeta').trim();
+  const resultEl = $('testResult');
+  if(!file && !meta){ resultEl.textContent='Renseigne un titre/lien ou choisis un fichier.'; return; }
+  resultEl.textContent='Analyse en cours…';
+  try{
+    let fileHash=null, visualHash=null, audioHash=null;
+    if(file){
+      fileHash = await hashFile(file);
+      const tempUrl = URL.createObjectURL(file);
+      const analysis = await analyzeVideo(tempUrl, (i,n,m)=>{ resultEl.textContent='Analyse en cours… '+Math.round(i/n*100)+' %'+(m==='play'?' — film long : garde cet onglet ouvert':''); });
+      visualHash = analysis.visualHash;
+      resultEl.textContent='Analyse de la bande sonore…';
+      audioHash = await analyzeAudioFile(file);
+      URL.revokeObjectURL(tempUrl);
+    }
+    const check = checkCopyright({url:meta, title:meta, desc:'', fileHash, visualHash, audioHash});
+    resultEl.innerHTML = check.blocked
+      ? '🛑 <strong>Bloqué</strong> — '+esc(check.reason)+' (empreinte : « '+esc(check.match.label)+' »)'
+      : (check.flagged
+        ? '⚠️ <strong>Autorisé mais signalé</strong> — '+esc(check.reason)+' (empreinte : « '+esc(check.match.label)+' »)'
+        : '✅ Autorisé — aucune empreinte protégée ne correspond.');
+  }catch(e){ console.error(e); resultEl.textContent='Erreur pendant le test : '+e.message; }
+}
+function refreshShieldLists(){
+  if(!$('shieldModal').classList.contains('open')) return;
+  renderFingerprintsList(); renderBlockLogList();
+  const h3s=document.querySelectorAll('#shieldBody h3.shield-h3');
+  if(h3s[0]) h3s[0].textContent='Empreintes actives ('+fingerprints.length+')';
+  if(h3s[1]) h3s[1].textContent='Journal des blocages ('+blockLog.length+')';
+}
+function onFpTypeChange(){
+  const isAudio = !!($('fpTypeAudio') && $('fpTypeAudio').checked);
+  if($('fpVideoRow')) $('fpVideoRow').hidden = isAudio;
+  if($('fpAudioRow')) $('fpAudioRow').hidden = !isAudio;
+}
+function previewFpCover(input){
+  const f=input.files[0], prev=$('fpCoverPreview'); if(!prev) return;
+  if(!f){ prev.innerHTML=''; return; }
+  const url=URL.createObjectURL(f);
+  prev.innerHTML='<img src="'+url+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">';
+}
+async function addFingerprint(){
+  const worktype = ($('fpTypeAudio') && $('fpTypeAudio').checked) ? 'audio' : 'video';
+  const label=val('fpLabel').trim();
+  const workTitle=val('fpWorkTitle').trim();
+  const rightsHolder=val('fpRightsHolder').trim();
+  const enforcement=val('fpEnforcement')||'bloquant';
+  const kw=val('fpKeyword').trim().toLowerCase();
+  const file = worktype==='audio' ? ($('fpAudioFile')&&$('fpAudioFile').files[0]) : $('fpFile').files[0];
+  const coverFile = worktype==='audio' ? ($('fpCover')&&$('fpCover').files[0]) : null;
+  if(!label){ shieldErrorMsg('Ajoute un libellé pour retrouver cette empreinte.'); return; }
+  if(!kw && !file){ shieldErrorMsg('Renseigne un mot-clé/lien ou un fichier original.'); return; }
+  try{
+    const now=Date.now();
+    let cover=null;
+    if(coverFile){ try{ cover=await fileToDataUrl(coverFile,200); }catch(e){ /* pochette optionnelle : on continue sans */ } }
+    const batch=[];
+    if(kw) batch.push({type:'keyword', value:kw, label, worktype, workTitle, rightsHolder, enforcement, cover, addedAt:now});
+    if(file){
+      if(worktype==='audio'){
+        shieldErrorMsg('Analyse du fichier audio…');
+        const exactHash = await hashFile(file);
+        const audioHash = await analyzeAudioFile(file, (i,n)=>shieldErrorMsg('Analyse du fichier audio… '+Math.round(i/n*100)+' %'));
+        batch.push({type:'file', worktype, label, workTitle, rightsHolder, enforcement, cover, exactHash, audioHash, addedAt:now});
+        if(!audioHash) toast("⚠️ Empreinte exacte enregistrée, mais l'empreinte audio perceptuelle n'a pas pu être calculée (codec non reconnu par le navigateur, ou fichier trop long/volumineux) — seule la copie strictement identique sera reconnue.");
+      } else {
+        shieldErrorMsg('Analyse de l\'image (empreinte exacte + perceptuelle)…');
+        const exactHash = await hashFile(file);
+        const tempUrl = URL.createObjectURL(file);
+        const analysis = await analyzeVideo(tempUrl, (i,n,m)=>shieldErrorMsg('Analyse de l\'image… '+Math.round(i/n*100)+' %'+(m==='play'?' — film long : garde cet onglet ouvert':'')));
+        URL.revokeObjectURL(tempUrl);
+        shieldErrorMsg('Analyse du son (dialogues, musique de fond…)…');
+        const audioHash = await analyzeAudioFile(file, (i,n)=>shieldErrorMsg('Analyse du son… '+Math.round(i/n*100)+' %'));
+        batch.push({type:'file', worktype, label, workTitle, rightsHolder, enforcement, cover, exactHash, visualHash: analysis.visualHash||null, audioHash: audioHash||null, partial: !!analysis.visualHash && !analysis.complete, addedAt:now});
+        if(!audioHash) toast("⚠️ Empreinte image enregistrée, mais pas de son détecté/analysé pour cette vidéo (pas de bande son, codec non reconnu, ou fichier trop long) — la musique/les dialogues de cette œuvre ne seront pas reconnus séparément de l'image.");
+      }
+    }
+    for(const fp of batch){ await db.collection('fingerprints').doc(newId()).set(fp); }
+    $('shieldErr').hidden=true;
+    $('fpLabel').value=''; $('fpWorkTitle').value=''; $('fpRightsHolder').value=''; $('fpKeyword').value=''; $('fpFile').value='';
+    if($('fpAudioFile')) $('fpAudioFile').value='';
+    if($('fpCover')){ $('fpCover').value=''; $('fpCoverPreview').innerHTML=''; }
+    toast('Empreinte enregistrée 🛡️');
+  }catch(e){ console.error(e); shieldErrorMsg("Impossible d'enregistrer : "+e.message); }
+}
+function fpDetail(fp){
+  if(fp.type==='keyword') return 'Mot-clé/lien : '+esc(fp.value);
+  if(fp.worktype==='audio'){
+    return fp.audioHash ? ('empreinte audio — extraits reconnus, durée '+formatDuration(fp.audioHash.duration)) : (fp.exactHash ? 'empreinte exacte seulement (analyse audio indisponible)' : 'aucune empreinte');
+  }
+  const parts=[];
+  if(fp.exactHash) parts.push('exacte');
+  if(fp.visualHash) parts.push('image : '+(Array.isArray(fp.visualHash) ? 'ancienne, copie complète seulement — à ré-ajouter' : (fp.partial ? '⚠️ INCOMPLÈTE, à ré-ajouter' : 'extraits reconnus')));
+  parts.push('son : '+(fp.audioHash ? 'extraits reconnus, durée '+formatDuration(fp.audioHash.duration) : 'non disponible'));
+  return 'empreinte fichier ('+(parts.join(' + ')||'aucune — CORS a bloqué l\'analyse')+')';
+}
+function fpRowHtml(fp){
+  const icon = fp.type==='keyword' ? '🔗' : (fp.worktype==='audio' ? '🎵' : '🎬');
+  const enforcement = fp.enforcement||'bloquant';
+  const badge = enforcement==='signalement' ? '⚠️ signalement (non bloquant)' : '🛡️ bloquant';
+  const cover = fp.cover ? '<img src="'+fp.cover+'" style="width:34px;height:34px;object-fit:cover;border-radius:6px;margin-right:8px;flex-shrink:0;">' : '';
+  return '<div class="shield-row"><div style="display:flex;align-items:center;">'+cover+'<div><strong>'+icon+' '+esc(fp.label)+'</strong>'
+    +'<br><span class="muted small">'+fpDetail(fp)+'</span><br><span class="muted small">'+badge+'</span></div></div>'
+    +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">'
+    +'<button class="icon-btn" title="Changer bloquant / signalement" onclick="toggleEnforcement(\''+fp.id+'\')">🔁</button>'
+    +'<button class="icon-btn danger" onclick="removeFingerprint(\''+fp.id+'\')">✕</button></div></div>';
+}
+/* Regroupe les empreintes : Bloc ayant droit > Bloc œuvre > empreintes (ex. « extrait » et « film complet »). */
+function renderFingerprintsList(){
+  const el=$('fpList'); if(!el) return;
+  if(!fingerprints.length){ el.innerHTML='<p class="muted small">Aucune empreinte enregistrée.</p>'; return; }
+  const NO_HOLDER='Sans ayant droit', NO_WORK='Sans titre d\'œuvre';
+  const holders=new Map(); // rightsHolder -> Map(workTitle -> [fp,...])
+  for(const fp of fingerprints){
+    const h=fp.rightsHolder||NO_HOLDER, w=fp.workTitle||NO_WORK;
+    if(!holders.has(h)) holders.set(h,new Map());
+    const works=holders.get(h);
+    if(!works.has(w)) works.set(w,[]);
+    works.get(w).push(fp);
+  }
+  const holderNames=Array.from(holders.keys()).sort((a,b)=> a===NO_HOLDER?1 : b===NO_HOLDER?-1 : a.localeCompare(b,'fr'));
+  el.innerHTML = holderNames.map(h=>{
+    const works=holders.get(h);
+    const workNames=Array.from(works.keys()).sort((a,b)=> a===NO_WORK?1 : b===NO_WORK?-1 : a.localeCompare(b,'fr'));
+    const total=Array.from(works.values()).reduce((n,arr)=>n+arr.length,0);
+    const workBlocks = workNames.map(w=>{
+      const items=works.get(w);
+      return '<details class="fp-work" open><summary>🎞️ '+esc(w)+' ('+items.length+')</summary>'
+        + items.map(fpRowHtml).join('') + '</details>';
+    }).join('');
+    return '<details class="fp-holder" open><summary>🏢 '+esc(h)+' ('+total+')</summary>'+workBlocks+'</details>';
+  }).join('');
+}
+function toggleEnforcement(id){
+  const fp=fingerprints.find(f=>f.id===id); if(!fp) return;
+  const next = (fp.enforcement||'bloquant')==='signalement' ? 'bloquant' : 'signalement';
+  db.collection('fingerprints').doc(id).update({enforcement:next}).catch(e=>{ console.error(e); toast('Erreur : '+e.message); });
+  toast(next==='signalement' ? 'Passée en signalement — ne bloquera plus, juste noté au journal' : 'Repassée en bloquant');
+}
+function removeFingerprint(id){
+  db.collection('fingerprints').doc(id).delete().catch(e=>{ console.error(e); toast('Erreur : '+e.message); });
+}
+function renderBlockLogList(){
+  const el=$('blockLogList'); if(!el) return;
+  el.innerHTML = blockLog.length ? blockLog.slice(0,25).map(b=>
+    '<div class="shield-row"><div><strong>'+esc(displayNameFor(b.authorId))+'</strong> — '+esc(b.title)+'<br>'
+    +'<span class="muted small">'+esc(b.source||'')+' • '+esc(b.reason)+' • '+timeAgo(b.ts)+'</span></div></div>'
+  ).join('') : '<p class="muted small">Aucun blocage pour l\'instant.</p>';
+}
+
+/* ============ SAUVEGARDE (export manuel, complément à Firebase) ============ */
+function openSync(){ $('syncModal').classList.add('open'); setCloudStatus(navigator.onLine); }
+function closeSync(){ $('syncModal').classList.remove('open'); }
+function exportData(){
+  const payload={videos, fingerprints, blockLog, exportedAt:Date.now(), exportedBy:currentUser};
+  const blob=new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='neuf-sauvegarde-'+Date.now()+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Sauvegarde exportée ✅');
+}
+$('btnSync').addEventListener('click', openSync);
+
+/* ============ IDENTITÉ & CONNEXION (locale) ============
+   Deux sortes de comptes : l'admin (ADMIN_NAME/ADMIN_EMAIL, un seul, accès au Bouclier Copyright)
+   et les comptes de classe (`users`, illimités) — chacun se connecte ou s'inscrit avec son e-mail,
+   choisit un nom de chaîne, et peut ajouter une photo de profil. Tant que personne n'est connecté,
+   la modale de connexion reste ouverte (pas de bouton pour la fermer) : impossible de naviguer sans
+   compte. */
+function openIdentityModal(){
+  $('loginEmail').value=''; $('loginPw').value=''; identityErrorMsg('');
+  $('signupName').value=''; $('signupEmail').value=''; $('signupPw').value=''; signupErrorMsg('');
+  switchIdentityTab('login');
+  $('identityModal').classList.add('open');
+  setTimeout(()=>{ const el=$('loginEmail'); if(el) el.focus(); }, 50);
+}
+function closeIdentityModal(){ $('identityModal').classList.remove('open'); }
+function switchIdentityTab(tab){
+  const isLogin = tab==='login';
+  $('tabLoginBtn').classList.toggle('active', isLogin);
+  $('tabSignupBtn').classList.toggle('active', !isLogin);
+  $('loginPane').hidden = !isLogin;
+  $('signupPane').hidden = isLogin;
+}
+function identityErrorMsg(msg){ const e=$('identityErr'); if(e){ e.textContent=msg; e.hidden=!msg; } }
+function signupErrorMsg(msg){ const e=$('signupErr'); if(e){ e.textContent=msg; e.hidden=!msg; } }
+function firebaseAuthErrorMsg(e){
+  const map = {
+    'auth/invalid-email':'Adresse email invalide.',
+    'auth/user-not-found':'Email ou mot de passe incorrect.',
+    'auth/wrong-password':'Email ou mot de passe incorrect.',
+    'auth/invalid-credential':'Email ou mot de passe incorrect.',
+    'auth/email-already-in-use':'Un compte existe déjà avec cet email.',
+    'auth/weak-password':'Mot de passe trop court (6 caractères minimum).',
+    'auth/network-request-failed':'Impossible de contacter Firebase — vérifie ta connexion internet.',
+    'auth/too-many-requests':'Trop de tentatives — réessaie dans quelques minutes.',
+    'timeout':'La connexion à Firebase met trop de temps à répondre — vérifie ta connexion et réessaie.',
+  };
+  return map[e.code] || ('Erreur : '+(e.message||e.code||'inconnue'));
+}
+/* Évite qu'un bouton reste bloqué en silence sur une connexion lente/coupée : au-delà de ce délai,
+   on abandonne et on affiche un message clair plutôt que d'attendre indéfiniment. */
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject({code:'timeout', message:'timeout'}), ms))
+  ]);
+}
+async function doLogin(){
+  const email=val('loginEmail').trim().toLowerCase();
+  const pw=val('loginPw');
+  identityErrorMsg('');
+  if(!email || !pw){ identityErrorMsg('Renseigne ton email et ton mot de passe.'); return; }
+  const btn=$('loginSubmitBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Connexion…'; }
+  try{ await withTimeout(auth.signInWithEmailAndPassword(email, pw), 30000); } // onAuthStateChanged prend le relais
+  catch(e){ console.error(e); identityErrorMsg(firebaseAuthErrorMsg(e)); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Se connecter'; } }
+}
+async function doSignup(){
+  const name=val('signupName').trim();
+  const email=val('signupEmail').trim().toLowerCase();
+  const pw=val('signupPw');
+  signupErrorMsg('');
+  if(!name){ signupErrorMsg('Choisis un nom de chaîne.'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ signupErrorMsg('Adresse email invalide.'); return; }
+  if(!pw || pw.length<6){ signupErrorMsg('Mot de passe trop court (6 caractères minimum).'); return; }
+  if(name===ADMIN_NAME){ signupErrorMsg('Ce nom de chaîne est réservé.'); return; }
+  const btn=$('signupSubmitBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Création en cours…'; }
+  try{
+    try{
+      const dup = await withTimeout(db.collection('users').where('name','==',name).limit(1).get(), 12000);
+      if(!dup.empty){ signupErrorMsg('Ce nom de chaîne est déjà pris — choisis-en un autre.'); return; }
+    }catch(e){ console.error(e); } // vérification facultative : on continue même si elle échoue ou traîne
+    const cred = await withTimeout(auth.createUserWithEmailAndPassword(email, pw), 30000);
+    await withTimeout(db.collection('users').doc(cred.user.uid).set({ name, pic:null, createdAt:Date.now() }), 30000);
+    toast('Bienvenue '+name+' 👋 Ta chaîne est créée.');
+  }catch(e){
+    console.error(e);
+    signupErrorMsg(firebaseAuthErrorMsg(e));
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Créer mon compte'; }
+  }
+}
+function doLogout(){
+  closeAccount(); closeShield();
+  auth.signOut().catch(e=>console.error(e)); // onAuthStateChanged prend le relais
+}
+function adminLogout(){ doLogout(); } // conservé : référencé par le bouton du Bouclier
+function updateIdentityPill(){
+  $('btnIdentity').textContent = currentUser ? initials(currentUser) : '?';
+  $('btnIdentity').title = currentUser || 'Se connecter';
+}
+function updateAuthUI(){
+  $('railStudio').hidden = !currentUser;
+}
+$('btnIdentity').addEventListener('click', ()=>{
+  if(isAdminAuthed()){ if(confirm('Se déconnecter du compte admin ?')) doLogout(); }
+  else if(currentAccountId) openAccount();
+  else openIdentityModal();
+});
+
+/* ============ MON COMPTE (nom de chaîne + photo de profil) ============ */
+let pendingAccountPic; // undefined = inchangée, sinon nouvelle data URL (ou null pour retirer la photo)
+function openAccount(){
+  const u=findUserById(currentAccountId); if(!u) return;
+  $('accountNameInput').value=u.name;
+  pendingAccountPic=undefined;
+  $('accountPicInput').value='';
+  renderAccountPicPreview(u.pic, u.name);
+  accountErrorMsg('');
+  $('accountModal').classList.add('open');
+}
+function closeAccount(){ const m=$('accountModal'); if(m) m.classList.remove('open'); }
+function accountErrorMsg(msg){ const e=$('accountErr'); if(e){ e.textContent=msg; e.hidden=!msg; } }
+function renderAccountPicPreview(pic, name){
+  const el=$('accountPicPreview');
+  if(pic) el.innerHTML='<img src="'+pic+'" alt="">';
+  else { el.innerHTML=''; el.textContent=initials(name||val('accountNameInput')||'?'); }
+}
+async function previewAccountPic(input){
+  const file=input.files[0]; if(!file) return;
+  try{ pendingAccountPic = await fileToDataUrl(file,200); renderAccountPicPreview(pendingAccountPic); }
+  catch(e){ console.error(e); toast('Impossible de charger cette image.'); }
+}
+async function saveAccount(){
+  const u=findUserById(currentAccountId); if(!u) return;
+  const newName=val('accountNameInput').trim();
+  accountErrorMsg('');
+  if(!newName){ accountErrorMsg('Le nom de chaîne ne peut pas être vide.'); return; }
+  if(newName!==u.name){
+    if(newName===ADMIN_NAME){ accountErrorMsg('Ce nom de chaîne est réservé.'); return; }
+    try{
+      const dup = await db.collection('users').where('name','==',newName).limit(1).get();
+      if(!dup.empty){ accountErrorMsg('Ce nom de chaîne est déjà pris.'); return; }
+    }catch(e){ console.error(e); }
+  }
+  const patch={name:newName};
+  if(pendingAccountPic!==undefined) patch.pic=pendingAccountPic;
+  try{ await db.collection('users').doc(u.id).update(patch); }
+  catch(e){ console.error(e); accountErrorMsg("Échec de l'enregistrement : "+e.message); return; }
+  // authorId (uid) ne change jamais : le nom affiché est résolu en direct partout (displayNameFor),
+  // donc les vidéos/commentaires déjà publiés suivent automatiquement le renommage, sans rien à mettre à jour.
+  currentUser=newName;
+  closeAccount();
+  updateIdentityPill();
+  toast('Chaîne mise à jour ✅');
+}
+
+/* ============ STUDIO (vues, j'aime, commentaires, suppression) ============ */
+function openStudio(){
+  if(!currentUser){ openIdentityModal(); return; }
+  switchView('studio');
+  renderStudio();
+}
+function renderStudio(){
+  $('studioChannelName').textContent = currentUser;
+  const mine = videos.filter(v=>isVideoOwner(v)).sort((a,b)=>b.createdAt-a.createdAt);
+  const totalViews = mine.reduce((n,v)=>n+(v.views||0),0);
+  const totalLikes = mine.reduce((n,v)=>n+((v.likedBy||[]).length),0);
+  const totalComments = mine.reduce((n,v)=>n+((v.comments||[]).length),0);
+  $('studioStats').innerHTML = [
+    [mine.length, mine.length>1?'Vidéos':'Vidéo'],
+    [totalViews, 'Vues totales'],
+    [totalLikes, "J'aime"],
+    [totalComments, 'Commentaires'],
+  ].map(([num,lbl])=>'<div class="studio-stat"><div class="num">'+num+'</div><div class="lbl">'+esc(lbl)+'</div></div>').join('');
+
+  const days=[]; const today=new Date();
+  for(let i=13;i>=0;i--){ const d=new Date(today); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const counts = days.map(day => mine.reduce((n,v)=>n+((v.viewLog&&v.viewLog[day])||0),0));
+  const max = Math.max(1, ...counts);
+  $('studioChart').innerHTML = counts.map((c,i)=>{
+    const h = Math.max(2, Math.round(c/max*72));
+    const dLabel = new Date(days[i]+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    return '<div class="studio-bar" style="height:'+h+'px;" title="'+dLabel+' : '+c+' vue'+(c>1?'s':'')+'"><span class="bar-tip">'+c+'</span></div>';
+  }).join('');
+
+  const empty=$('studioEmpty'), list=$('studioList');
+  if(!mine.length){ list.innerHTML=''; empty.hidden=false; return; }
+  empty.hidden=true;
+  list.innerHTML = mine.map(v=>{
+    const thumbInner = v.thumb ? '<img src="'+v.thumb+'" alt="">' : playIconSvg();
+    return '<div class="studio-row">'
+      +'<div class="studio-thumb" onclick="openWatch(\''+v.id+'\')" style="cursor:pointer;">'+thumbInner+'</div>'
+      +'<div class="studio-meta" onclick="openWatch(\''+v.id+'\')" style="cursor:pointer;">'
+      +'<div class="studio-title">'+esc(v.title)+'</div>'
+      +'<div class="studio-nums">'+(v.views||0)+' vues • '+((v.likedBy||[]).length)+' j\'aime • '+((v.comments||[]).length)+' commentaires • '+timeAgo(v.createdAt)+'</div>'
+      +'</div>'
+      +'<button class="icon-btn danger" title="Supprimer cette vidéo" onclick="event.stopPropagation();studioDeleteVideo(\''+v.id+'\')">🗑️</button>'
+      +'</div>';
+  }).join('');
+}
+async function studioDeleteVideo(id){
+  const ok = await deleteVideo(id);
+  if(ok){ toast('Vidéo supprimée.'); renderStudio(); }
+}
+
+/* ============ WIRING GÉNÉRAL ============ */
+$('btnMenu').addEventListener('click', ()=>$('rail').classList.toggle('open'));
+$('btnUpload').addEventListener('click', openUploadModal);
+$('btnShield').addEventListener('click', openShield);
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target===ov && ov.id!=='identityModal') ov.classList.remove('open'); });
+});
+
+/* ============ BOOT — piloté par l'état d'authentification Firebase ============ */
+switchView('home');
+openIdentityModal(); // affichée tant que l'état de connexion n'est pas encore connu, évite un flash d'accueil vide
+auth.onAuthStateChanged(async (user)=>{
+  detachListeners();
+  if(user){
+    if(user.email===ADMIN_EMAIL){
+      currentAccountId=null; currentUser=ADMIN_NAME;
+    } else {
+      currentAccountId=user.uid;
+      currentUser=null; // renseigné par l'écouteur users dès que le profil est disponible (couvre l'inscription juste en cours)
+    }
+    attachListeners();
+    closeIdentityModal();
+    updateIdentityPill();
+    updateAuthUI();
+    goHome();
+  } else {
+    currentUser=null; currentAccountId=null;
+    updateIdentityPill();
+    updateAuthUI();
+    openIdentityModal();
+  }
+});
+</script>
+</body>
+</html>
